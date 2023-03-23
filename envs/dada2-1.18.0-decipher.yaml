@@ -1,0 +1,11 @@
+name: dada2-1.18.0-decipher
+channels:
+ - r
+ - bioconda
+ - conda-forge
+dependencies:
+ - r-base=4.0.5
+ - bioconductor-dada2=1.18.0
+ - bioconductor-decipher
+ - r-here=1.0.1
+ - r-matrix=1.3.2

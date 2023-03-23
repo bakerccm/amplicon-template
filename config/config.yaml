@@ -1,5 +1,62 @@
 sample_metadata:
-    "metadata/samples.tsv"
+    16S: "metadata/samples_16S.tsv"
+    ITS: "metadata/samples_ITS.tsv"
 
-# some_parameter:
-#     1000
+# locations of raw data files
+# -- amend these if you save the raw data with a different name or location
+# input files can be gzipped
+raw_data:
+    16S:
+        index: "data/16S_Undetermined_S0_L001_Index_TXRange_SERDP.fastq.gz"
+        read1: "data/16S_Undetermined_S0_L001_R1_TXRange_SERDP.fastq.gz"
+        read2: "data/16S_Undetermined_S0_L001_R2_TXRange_SERDP.fastq.gz"
+    ITS:
+        index: "data/ITS_Undetermined_S0_L001_Index_TXRange_SERDP.fastq.gz"
+        read1: "data/ITS_Undetermined_S0_L001_R1_TXRange_SERDP.fastq.gz"
+        read2: "data/ITS_Undetermined_S0_L001_R2_TXRange_SERDP.fastq.gz"
+
+primers:
+    16S:
+        forward: 'GTGYCAGCMGCCGCGGTAA' # 515FY (Parada et al. 2016)
+        reverse: 'GGACTACNVGGGTWTCTAAT' # 806RB (Apprill et al. 2015)
+    ITS:
+        forward: 'TTGGTCATTTAGAGGAAGTAAAAGTCGTAACAAGGTTTCC' # read 1 sequencing primer (Smith and Peay 2014)
+        reverse: 'CGTTCTTCATCGATGCVAGARCCAAGAGATC' # read 2 sequencing primer (Smith and Peay 2014)
+
+# cutadapt parameters
+cutadapt:
+    min_length: 50 # force cutadapt to remove sequences shorter than this; should be >0 to avoid downstream problems in dada2
+
+# dada2::filterAndTrim parameters
+# note values for maxEE and truncLen are supplied separately for read1 and read2 here and converted to vectors in R
+filterAndTrim:
+    16S:
+        maxN: 0 # dada2 requires reads with no Ns
+        truncQ: 2 # [default 2] truncate reads at the first instance of a quality score less than or equal to truncQ
+        maxEE_read1: 2 # [default Inf i.e. no filtering] after truncation, discard read1's with >maxEE 'expected errors', calculated as EE = sum(10^(-Q/10))
+        maxEE_read2: 2 # [default Inf i.e. no filtering] after truncation, discard read2's with >maxEE 'expected errors', calculated as EE = sum(10^(-Q/10))
+        truncLen_read1: 0 # [default 0 i.e. no truncation] truncate read1's after truncLen bases; reads shorter than this are discarded
+        truncLen_read2: 0 # [default 0 i.e. no truncation] truncate read2's after truncLen bases; reads shorter than this are discarded
+    ITS:
+        maxN: 0 # dada2 requires reads with no Ns
+        truncQ: 2 # [default 2] truncate reads at the first instance of a quality score less than or equal to truncQ
+        maxEE_read1: 2 # [default Inf i.e. no filtering] after truncation, discard read1's with >maxEE 'expected errors', calculated as EE = sum(10^(-Q/10))
+        maxEE_read2: 2 # [default Inf i.e. no filtering] after truncation, discard read2's with >maxEE 'expected errors', calculated as EE = sum(10^(-Q/10))
+        minLen: 50 # [default 20] remove reads with length <minLen, enforced *after* trimming and truncation
+
+# dada2::learnErrors parameters
+learnErrors:
+    nbases: 1e8
+
+# locations of training sets for taxonomic assignment
+# (different tools require databases to be formatted differently, so databases are listed here as tool:database)
+databases:
+    assignTaxonomy:
+        silva: 'databases/silva_nr99_v138.1_train_set.fa.gz'
+        rdp: 'databases/rdp_train_set_18.fa.gz'
+        unite: 'databases/sh_general_release_s_10.05.2021/sh_general_release_dynamic_s_10.05.2021.fasta.gz' # alternatively, consider using the dev version at sh_general_release_dynamic_s_10.05.2021_dev.fasta
+    assignSpecies:
+        silva: 'databases/silva_species_assignment_v138.1.fa.gz'
+        rdp: 'databases/rdp_species_assignment_18.fa.gz'
+    DECIPHER:
+        silva: 'databases/SILVA_SSU_r138_2019.RData'
