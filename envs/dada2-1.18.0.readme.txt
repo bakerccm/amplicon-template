@@ -1,0 +1,11 @@
+21 May 2021
+
+N.B. specification of r-matrix=1.3-2 here
+
+r-matrix=1.3-3 is loaded by default if not specified, but there is some issue that causes problems when dada2 calls functions from the package
+
+apparently this issue will be fixed in the next version of dada2 (v 1.19?), by removing the dependency on r-matrix, but this version is not yet available through conda
+
+consider upgrading to dada2 v1.19 and removing specification of r-matrix when it is available
+
+

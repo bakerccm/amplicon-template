@@ -1,0 +1,9 @@
+name: phyloseq
+channels:
+ - r
+ - bioconda
+ - conda-forge
+ - defaults
+dependencies:
+ - r-base
+ - bioconductor-phyloseq

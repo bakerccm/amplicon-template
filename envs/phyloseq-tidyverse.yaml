@@ -1,0 +1,11 @@
+name: phyloseq-tidyverse
+channels:
+ - r
+ - bioconda
+ - conda-forge
+ - defaults
+dependencies:
+ - r-base
+ - r-here
+ - r-tidyverse
+ - bioconductor-phyloseq

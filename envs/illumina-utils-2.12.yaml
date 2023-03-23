@@ -1,0 +1,5 @@
+name: illumina-utils-2.12
+channels:
+ - bioconda
+dependencies:
+ - illumina-utils=2.12
