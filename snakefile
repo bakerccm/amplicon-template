@@ -5,7 +5,7 @@
 # 23 March 2023
 
 from snakemake.utils import min_version
-min_version("7.18.2")
+min_version("7.25.0")
 
 ################################
 ## get config file
