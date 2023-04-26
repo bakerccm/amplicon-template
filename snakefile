@@ -24,6 +24,8 @@ wildcard_constraints:
 ## get sample metadata
 
 import pandas as pd
+import os # for os.path.join()
+
 METADATA = {
     '16S': pd.read_csv(config['sample_metadata']['16S'], sep = '\t', index_col = 'SampleID'),
     'ITS': pd.read_csv(config['sample_metadata']['ITS'], sep = '\t', index_col = 'SampleID')
@@ -73,14 +75,16 @@ for dataset in ["16S", "ITS"]:
         name:
             'demultiplex_' + dataset
         input:
-            barcodes = 'out/' + dataset + '/demultiplexed/barcodes.txt',
+            barcodes = os.path.join('out', dataset, 'demultiplexed', 'barcodes.txt'),
             read1 = config['raw_data'][dataset]['read1'],
             read2 = config['raw_data'][dataset]['read2'],
             index = config['raw_data'][dataset]['index']
         output:
-            'out/' + dataset + '/demultiplexed/' + sample + '-' + read + '.fastq' for sample in SAMPLES[dataset] for read in ["R1","R2"]
+            [os.path.join('out', dataset, 'demultiplexed', sample + '-' + read + '.fastq') 
+                for sample in SAMPLES[dataset] 
+                for read in ["R1","R2"]]
         params:
-            output_dir = 'out/' + dataset + '/demultiplexed'
+            output_dir = os.path.join('out', dataset, 'demultiplexed')
         conda:
             'envs/illumina-utils-2.12.yaml'
         shell:
@@ -110,7 +114,9 @@ rule demultiplex_fastqc:
 # N.B. this rule asks for fastqc files for all demultiplexed samples
 rule demultiplex_multiqc:
     input:
-        fastqc = lambda wildcards: ['out/' + wildcards.dataset + '/demultiplexed/' + sample + '-' + read + '_fastqc.zip' for sample in SAMPLES[wildcards.dataset] for read in ['R1','R2']]
+        fastqc = lambda wildcards: [os.path.join('out', wildcards.dataset, 'demultiplexed', sample + '-' + read + '_fastqc.zip') 
+            for sample in SAMPLES[wildcards.dataset]
+            for read in ['R1','R2']]
     output:
         'out/{dataset}/demultiplexed/multiqc_report.html'
     params:
@@ -297,7 +303,8 @@ rule all_learnerrors:
 rule learnerrors:
     input:
         # all the fastq files for the specified read direction (R1 or R2) for the specified dataset (16S or ITS)
-        lambda wildcards: ['out/' + wildcards.dataset + '/learnerrors/' + wildcards.read + '/' + sample + '-' + wildcards.read + '.fastq.gz' for sample in SAMPLES[wildcards.dataset]]
+        lambda wildcards: [os.path.join('out', wildcards.dataset, 'learnerrors', wildcards.read, sample + '-' + wildcards.read + '.fastq.gz') 
+            for sample in SAMPLES[wildcards.dataset]]
     output:
         rds = 'out/{dataset}/learnerrors/{read}_error_profile.rds',
         pdf = 'out/{dataset}/learnerrors/{read}_error_profile.pdf'
@@ -348,7 +355,8 @@ rule all_dada_merge:
 # each dataset runs in ~1min with a single core
 rule dada_merge_samples:
     input:
-        lambda wildcards: ['out/' + wildcards.dataset + '/dada/' + sample + '.rds' for sample in SAMPLES[wildcards.dataset]]
+        lambda wildcards: [os.path.join('out', wildcards.dataset, 'dada', sample + '.rds') 
+            for sample in SAMPLES[wildcards.dataset]]
     output:
         sample_list = 'out/{dataset}/dada/sample_list.txt',
         sequence_table = 'out/{dataset}/dada/sequence_table.rds'
