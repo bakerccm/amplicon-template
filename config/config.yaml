@@ -1,3 +1,7 @@
+datasets:
+    16S
+    ITS
+
 sample_metadata:
     16S: "metadata/samples_16S.tsv"
     ITS: "metadata/samples_ITS.tsv"

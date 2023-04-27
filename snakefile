@@ -26,23 +26,23 @@ wildcard_constraints:
 import pandas as pd
 import os # for os.path.join()
 
-METADATA = {
-    '16S': pd.read_csv(config['sample_metadata']['16S'], sep = '\t', index_col = 'SampleID'),
-    'ITS': pd.read_csv(config['sample_metadata']['ITS'], sep = '\t', index_col = 'SampleID')
-}
-SAMPLES = {
-    '16S': list(METADATA['16S'].index),
-    'ITS': list(METADATA['ITS'].index)
-}
+DATASETS = config['datasets'] # 16S, ITS etc
+
+METADATA = {} # dict of metadata tables
+SAMPLES = {} # dict of sample id lists
+for dataset in DATASETS:
+    METADATA[dataset] = pd.read_csv(config['sample_metadata'][dataset], sep = '\t', index_col = 'SampleID')
+    SAMPLES[dataset] = list(METADATA[dataset].index)
 
 ################################
 # default rule
 
 rule all:
     input:
-        expand('out/{dataset}/demultiplexed/multiqc_report.html', dataset = ['16S','ITS']),
-        expand('out/16S/read_quality_profiles/{sample}.pdf', sample = SAMPLES['16S']),
-        expand('out/ITS/read_quality_profiles/{sample}.pdf', sample = SAMPLES['ITS']),
+        expand('out/{dataset}/demultiplexed/multiqc_report.html', dataset = DATASETS),
+        [os.path.join('out', dataset, 'read_quality_profiles', sample + '.pdf') 
+            for dataset in DATASETS 
+            for sample in SAMPLES[dataset]]
         "out/combined/amplicon_normalized.rdata"
 
 ################################
@@ -50,7 +50,7 @@ rule all:
 
 rule all_demultiplex_qc:
     input:
-        expand('out/{dataset}/demultiplexed/multiqc_report.html', dataset = ['16S','ITS'])
+        expand('out/{dataset}/demultiplexed/multiqc_report.html', dataset = DATASETS)
 
 # make barcode lists from metadata files
 # N.B. pulls out first column (should be sample) and fourth column (should be barcode) but
@@ -70,7 +70,7 @@ rule barcode_list:
 # - alternatively, if you write a rule that just specifies a single sample's outputs rather than all the output files for a dataset, the rule runs once per sample rather than once per dataset
 # - see discussion at https://stackoverflow.com/questions/41135801/snakemake-best-practice-for-demultiplexing
 # - note: requires snakemake 5.31.0 or later for 'name' keyword to work
-for dataset in ["16S", "ITS"]:
+for dataset in DATASETS:
     rule:
         name:
             'demultiplex_' + dataset
@@ -82,7 +82,7 @@ for dataset in ["16S", "ITS"]:
         output:
             [os.path.join('out', dataset, 'demultiplexed', sample + '-' + read + '.fastq') 
                 for sample in SAMPLES[dataset] 
-                for read in ["R1","R2"]]
+                for read in ['R1','R2']]
         params:
             output_dir = os.path.join('out', dataset, 'demultiplexed')
         conda:
@@ -134,8 +134,10 @@ rule demultiplex_multiqc:
 
 rule all_filter_Ns:
     input:
-        expand('out/16S/demultiplexed_no_Ns/{sample}-{file}', sample = SAMPLES['16S'], file = ['R1.fastq.gz','R2.fastq.gz','summary.txt']),
-        expand('out/ITS/demultiplexed_no_Ns/{sample}-{file}', sample = SAMPLES['ITS'], file = ['R1.fastq.gz','R2.fastq.gz','summary.txt'])
+        [os.path.join('out', dataset, 'demultiplexed_no_Ns', sample + '-' + file) 
+            for dataset in DATASETS 
+            for sample in SAMPLES[dataset] 
+            for file in ['R1.fastq.gz','R2.fastq.gz','summary.txt']]
 
 rule filter_Ns:
     input:
@@ -164,8 +166,10 @@ rule filter_Ns:
 
 rule all_cutadapt:
     input:
-        expand('out/16S/cutadapt/{sample}-{file}', sample = SAMPLES['16S'], file = ['R1.fastq.gz','R2.fastq.gz']),
-        expand('out/ITS/cutadapt/{sample}-{file}', sample = SAMPLES['ITS'], file = ['R1.fastq.gz','R2.fastq.gz'])
+        [os.path.join('out', dataset, 'cutadapt', sample + '-' + file) 
+            for dataset in DATASETS 
+            for sample in SAMPLES[dataset] 
+            for file in ['R1.fastq.gz','R2.fastq.gz']]
 
 rule cutadapt:
     input:
@@ -199,8 +203,9 @@ rule cutadapt:
 
 rule all_read_quality_profiles:
     input:
-        expand('out/16S/read_quality_profiles/{sample}.pdf', sample = SAMPLES['16S']),
-        expand('out/ITS/read_quality_profiles/{sample}.pdf', sample = SAMPLES['ITS'])
+        [os.path.join('out', dataset, 'read_quality_profiles', sample + '.pdf') 
+            for dataset in DATASETS 
+            for sample in SAMPLES[dataset]]
 
 rule read_quality_profiles:
     input:
@@ -226,8 +231,10 @@ rule read_quality_profiles:
 
 rule all_filter_and_trim:
     input:
-        expand('out/16S/filterAndTrim/{sample}-{read}.fastq.gz', sample = SAMPLES['16S'], read = ["R1", "R2"]),
-        expand('out/ITS/filterAndTrim/{sample}-{read}.fastq.gz', sample = SAMPLES['ITS'], read = ["R1", "R2"])
+        [os.path.join('out', dataset, 'filterAndTrim', sample + '-' + read + '.fastq.gz') 
+            for dataset in DATASETS 
+            for sample in SAMPLES[dataset] 
+            for read in ['R1','R2']]
 
 rule filter_and_trim_16S:
     input:
@@ -279,8 +286,10 @@ rule filter_and_trim_ITS:
 
 rule all_learnerrors_inputs:
     input:
-        expand('out/16S/learnerrors/{read}/{sample}-{read}.fastq.gz', sample = SAMPLES['16S'], read = ["R1", "R2"]),
-        expand('out/ITS/learnerrors/{read}/{sample}-{read}.fastq.gz', sample = SAMPLES['ITS'], read = ["R1", "R2"])
+        [os.path.join('out', dataset, 'learnerrors', read, sample + '-' + read + '.fastq.gz') 
+            for dataset in DATASETS 
+            for sample in SAMPLES[dataset] 
+            for read in ['R1','R2']]
 
 rule learnerrors_inputs:
     input:
@@ -298,7 +307,9 @@ rule learnerrors_inputs:
 rule all_learnerrors:
     input:
         # one job for each read direction in each dataset
-        expand('out/{dataset}/learnerrors/{read}_error_profile.rds', dataset = ['16S','ITS'], read = ["R1","R2"])
+        [os.path.join('out', dataset, 'learnerrors', read + '_error_profile.rds') 
+            for dataset in DATASETS 
+            for read in ['R1','R2']]
 
 rule learnerrors:
     input:
@@ -328,8 +339,9 @@ rule learnerrors:
 
 rule all_dada:
     input:
-        expand('out/16S/dada/{sample}.rds', sample = SAMPLES['16S']),
-        expand('out/ITS/dada/{sample}.rds', sample = SAMPLES['ITS'])
+        [os.path.join('out', dataset, 'dada', sample + '.rds') 
+            for dataset in DATASETS 
+            for sample in SAMPLES[dataset]]
 
 # this rule appears to be memory intensive, especially for samples with many reads e.g the respiration samples
 # -- it may be necessary to limit execution to a couple of jobs at a time to ensure enough memory is available
@@ -350,7 +362,7 @@ rule dada:
 
 rule all_dada_merge:
     input:
-        expand('out/{dataset}/dada/sequence_table.rds', dataset = ["16S","ITS"])
+        expand('out/{dataset}/dada/sequence_table.rds', dataset = DATASETS)
 
 # each dataset runs in ~1min with a single core
 rule dada_merge_samples:
@@ -381,7 +393,7 @@ rule dada_merge_samples:
 
 rule all_remove_chimeras:
     input:
-        expand('out/{dataset}/remove_chimeras/sequence_table.rds', dataset = ['16S','ITS'])
+        expand('out/{dataset}/remove_chimeras/sequence_table.rds', dataset = DATASETS)
 
 # each dataset runs in ~1min with a single core
 rule remove_chimeras:
@@ -467,7 +479,7 @@ rule decipher:
 
 rule all_export_to_phyloseq:
     input:
-        expand("out/{dataset}/phyloseq/phyloseq.rds", dataset = ["16S","ITS"])
+        expand("out/{dataset}/phyloseq/phyloseq.rds", dataset = DATASETS)
 
 rule export_to_phyloseq_16S:
     input:
@@ -554,5 +566,70 @@ rule normalize_phyloseq:
        	"envs/phyloseq-tidyverse.yaml"
     shell:
         "Rscript code/normalize_data.R {input.phyloseq_16S} {input.sepp_tree_16S} {input.phyloseq_ITS} {output} >{log}"
+
+################################
+## get sequence counts at various stages of the pipeline
+
+rule count_seqs_pre_demultiplexing:
+    input:
+        config['raw_data'][dataset]['read1']
+    output:
+        "out/sequence_counts/pre_demultiplexing/{dataset}.txt"
+    shell:
+        '''
+        SAMPLE=`basename {input}`
+        SEQS=`echo $(zcat {input} | wc -l)/4|bc`
+        echo ${{SAMPLE}} ${{SEQS}} >{output}
+        '''
+
+rule count_seqs_post_demultiplexing:
+    input:
+        "out/{dataset}/demultiplexed/{sample}-R1.fastq.gz"
+    output:
+        "out/sequence_counts/post_demultiplexing/{dataset}/{sample}.txt"
+    shell:
+        '''
+        SAMPLE=`basename {input} -R1.fastq.gz`
+        SEQS=`echo $(zcat {input} | wc -l)/4|bc`
+        echo ${SAMPLE} ${SEQS} >{output}
+        '''
+
+rule count_seqs_post_demultiplexing_and_filtering:
+    input:
+        "out/{dataset}/demultiplexed_no_Ns/{sample}-R1.fastq.gz"
+    output:
+        "out/sequence_counts/post_demultiplexing_noNs/{dataset}/{sample}.txt"
+    shell:
+        '''
+        SAMPLE=`basename {input} -R1.fastq.gz`
+        SEQS=`echo $(zcat {input} | wc -l)/4|bc`
+        echo ${SAMPLE} ${SEQS} >{output}
+        '''
+
+rule count_seqs_post_cutadapt:
+    input:
+        "out/{dataset}/cutadapt/{sample}-R1.fastq.gz"
+    output:
+        "out/sequence_counts/post_cutadapt/{dataset}/{sample}.txt"
+    shell:
+        '''
+        SAMPLE=`basename {input} -R1.fastq.gz`
+        SEQS=`echo $(zcat {input} | wc -l)/4|bc`
+        echo ${SAMPLE} ${SEQS} >{output}
+        '''
+
+rule count_seqs_post_filter_and_trim:
+    input:
+        "out/{dataset}/filterAndTrim/{sample}-R1.fastq.gz"
+    output:
+        "out/sequence_counts/post_filterAndTrim/{dataset}/{sample}.txt"
+    shell:
+        '''
+        SAMPLE=`basename {input} -R1.fastq.gz`
+        SEQS=`echo $(zcat {input} | wc -l)/4|bc`
+        echo ${SAMPLE} ${SEQS} >{output}
+        '''
+
+# ... add more sequence counting rules here
 
 ################################
