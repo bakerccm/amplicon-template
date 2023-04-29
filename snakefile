@@ -570,7 +570,22 @@ rule normalize_phyloseq:
 ################################
 ## get sequence counts at various stages of the pipeline
 
-rule count_seqs_pre_demultiplexing:
+rule get_all_sequence_counts:
+    input:
+        expand("out/sequence_counts/pre_demultiplexing/{dataset}.txt", dataset = DATASETS),
+        expand("out/sequence_counts/post_demultiplexing/{dataset}.txt", dataset = DATASETS),
+        expand("out/sequence_counts/post_demultiplexing_noNs/{dataset}.txt", dataset = DATASETS),
+        expand("out/sequence_counts/post_cutadapt/{dataset}.txt", dataset = DATASETS),
+        expand("out/sequence_counts/post_filterAndTrim/{dataset}.txt", dataset = DATASETS),
+        expand("out/sequence_counts/post_dada/{dataset}.txt", dataset = DATASETS),
+        expand("out/sequence_counts/post_chimeras/{dataset}.txt", dataset = DATASETS),
+        [os.path.join("out", "sequence_counts", "post_phyloseq", "16S", file + ".txt") for file in ["phyloseq", "phyloseq_cleaned"] if "16S" in DATASETS] + \
+            [os.path.join("out", "sequence_counts", "post_phyloseq", dataset, "phyloseq.txt") for dataset in DATASETS if dataset != "16S"],
+        expand("out/sequence_counts/post_normalize/{dataset}.txt", dataset = DATASETS)
+
+# sequence counts prior to demultiplexing
+
+rule sequence_counts_pre_demultiplexing:
     input:
         config['raw_data'][dataset]['read1']
     output:
@@ -582,7 +597,9 @@ rule count_seqs_pre_demultiplexing:
         echo ${{SAMPLE}} ${{SEQS}} >{output}
         '''
 
-rule count_seqs_post_demultiplexing:
+# sequence counts after demultiplexing
+
+rule sequence_counts_post_demultiplexing:
     input:
         "out/{dataset}/demultiplexed/{sample}-R1.fastq.gz"
     output:
@@ -594,7 +611,20 @@ rule count_seqs_post_demultiplexing:
         echo ${SAMPLE} ${SEQS} >{output}
         '''
 
-rule count_seqs_post_demultiplexing_and_filtering:
+rule aggregate_sequence_counts_post_demultiplexing:
+    input:
+        lambda wildcards: [os.path.join("out", "sequence_counts", "post_demultiplexing", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcard.dataset]]
+    output:
+        "out/sequence_counts/post_demultiplexing/{dataset}.txt"
+    shell:
+        '''
+        rm -rf {output}
+        for f in {input}; do cat $f >>{output}; done
+        '''
+
+# sequence counts after demultiplexing and filtering
+
+rule sequence_counts_post_demultiplexing_and_filtering:
     input:
         "out/{dataset}/demultiplexed_no_Ns/{sample}-R1.fastq.gz"
     output:
@@ -606,7 +636,20 @@ rule count_seqs_post_demultiplexing_and_filtering:
         echo ${SAMPLE} ${SEQS} >{output}
         '''
 
-rule count_seqs_post_cutadapt:
+rule aggregate_sequence_counts_post_demultiplexing_and_filtering:
+    input:
+        lambda wildcards: [os.path.join("out", "sequence_counts", "post_demultiplexing_noNs", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcard.dataset]]
+    output:
+        "out/sequence_counts/post_demultiplexing_noNs/{dataset}.txt"
+    shell:
+        '''
+        rm -rf {output}
+        for f in {input}; do cat $f >>{output}; done
+        '''
+
+# sequence counts after running cutadapt
+
+rule sequence_counts_post_cutadapt:
     input:
         "out/{dataset}/cutadapt/{sample}-R1.fastq.gz"
     output:
@@ -618,7 +661,20 @@ rule count_seqs_post_cutadapt:
         echo ${SAMPLE} ${SEQS} >{output}
         '''
 
-rule count_seqs_post_filter_and_trim:
+rule aggregate_sequence_counts_post_cutadapt:
+    input:
+        lambda wildcards: [os.path.join("out", "sequence_counts", "post_cutadapt", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcard.dataset]]
+    output:
+        "out/sequence_counts/post_cutadapt/{dataset}.txt"
+    shell:
+        '''
+        rm -rf {output}
+        for f in {input}; do cat $f >>{output}; done
+        '''
+
+# sequence counts after filterAndTrim
+
+rule sequence_counts_post_filter_and_trim:
     input:
         "out/{dataset}/filterAndTrim/{sample}-R1.fastq.gz"
     output:
@@ -630,6 +686,109 @@ rule count_seqs_post_filter_and_trim:
         echo ${SAMPLE} ${SEQS} >{output}
         '''
 
-# ... add more sequence counting rules here
+rule aggregate_sequence_counts_post_filter_and_trim:
+    input:
+        lambda wildcards: [os.path.join("out", "sequence_counts", "post_filterAndTrim", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcard.dataset]]
+    output:
+        "out/sequence_counts/post_filterAndTrim/{dataset}.txt"
+    shell:
+        '''
+        rm -rf {output}
+        for f in {input}; do cat $f >>{output}; done
+        '''
+
+# sequence counts after running dada
+
+rule sequence_counts_post_dada:
+    input:
+        "out/{dataset}/dada/sequence_table.rds"
+    output:
+        "out/sequence_counts/post_dada/{dataset}.txt"
+    conda:
+        'envs/dada2-1.18.0.yaml'
+    shell:
+        '''
+        # make sure folder for output file exists
+            mkdir -p `dirname {output}`
+        # count sequences in sequence table
+            Rscript sequence_counts_post_dada.R {input} {output}
+        '''
+
+# sequence counts after removing chimeras
+
+rule sequence_counts_post_chimeras:
+    input:
+        "out/{dataset}/remove_chimeras/sequence_table.rds"
+    output:
+        "out/sequence_counts/post_chimeras/{dataset}.txt"
+    conda:
+        'envs/dada2-1.18.0.yaml'
+    shell:
+        '''
+        # make sure folder for output file exists
+            mkdir -p `dirname {output}`
+        # count sequences in sequence table
+            Rscript sequence_counts_post_dada.R {input} {output}
+        '''
+
+# sequence counts after exporting to phyloseq (should be the same as post-chimeras)
+#### could we ignore the non-cleaned version of 16S, or insert an extra step where we see the effect of cleaning?
+
+# ... for dataset == "16S"
+rule sequence_counts_post_phyloseq_16S:
+    input:
+        phyloseq = "out/16S/phyloseq/phyloseq.rds",
+        phyloseq_cleaned = "out/16S/phyloseq/phyloseq_cleaned.rds"
+    output:
+        phyloseq = "out/sequence_counts/post_phyloseq/16S/phyloseq.txt",
+        phyloseq_cleaned = "out/sequence_counts/post_phyloseq/16S/phyloseq_cleaned.rds"
+    conda:
+        "envs/phyloseq.yaml"
+    shell:
+        '''
+        # make sure folder for output file exists
+            mkdir -p `dirname {output}`
+        # count sequences in sequence table
+            Rscript sequence_counts_post_phyloseq.R {input.phyloseq} {output.phyloseq}
+            Rscript sequence_counts_post_phyloseq.R {input.phyloseq_cleaned} {output.phyloseq_cleaned}
+        '''
+
+# ... for dataset != "16S"
+for dataset in [d for d in DATASETS if d != "16S"]:
+    rule:
+        name:
+            'sequence_counts_post_phyloseq_' + dataset
+        input:
+            "out/{dataset}/phyloseq/phyloseq.rds"
+        output:
+            "out/sequence_counts/post_phyloseq/{dataset}/phyloseq.txt"
+        conda:
+            "envs/phyloseq.yaml"
+        shell:
+            '''
+            # make sure folder for output file exists
+                mkdir -p `dirname {output}`
+            # count sequences in sequence table
+                Rscript sequence_counts_post_phyloseq.R {input} {output}
+            '''
+            
+# sequence counts after normalization (should be the same as post-chimeras)
+            
+rule sequence_counts_post_normalize:
+    input:
+        "out/combined/amplicon_normalized.rdata"
+    output:
+        expand("out/sequence_counts/post_normalize/{dataset}.txt", dataset = DATASETS)
+    params:
+        output_dir = "out/sequence_counts/post_normalize"
+    conda:
+        "envs/phyloseq.yaml"
+    shell:
+        '''
+        # make sure folder for output files exists
+            mkdir -p {params.output_dir}
+        # count sequences in sequence table
+            Rscript sequence_counts_post_normalize.R {input} {params.output_dir}
+        '''
 
 ################################

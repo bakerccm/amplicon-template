@@ -1,8 +1,8 @@
 library("here")
 library("tidyverse")
 library("scales")
-library("readxl")
-library("writexl")
+# library("readxl")
+# library("writexl")
 
 ################################
 ## get read counts
@@ -11,75 +11,71 @@ library("writexl")
     
     # prior to demultiplexing
     
-        reads$pre_demultiplexing <- read_delim(here("out", "combined", "sequence_counts", "pre_demultiplexing_seqs.txt"), col_names = c("file","reads"), delim = " ")
-
-        reads$pre_demultiplexing # the three files should have the same read count for each dataset
-        
-        reads$pre_demultiplexing <- reads$pre_demultiplexing %>%
-            # pick the pair of files you want to use here
-                filter(file %in% c("16S_Undetermined_S0_L001_Index_TXRange_SERDP.fastq.gz", "ITS_Undetermined_S0_L001_Index_TXRange_SERDP.fastq.gz")) %>%
-            # add dataset labels
-                mutate(dataset = substr(file, 1, 3)) %>%
-            # reorganize
-                select(dataset, reads)
+        reads$pre_demultiplexing <- list(
+            `16S` = read_delim(here("out", "sequence_counts", "pre_demultiplexing", "16S.txt"), col_names = c("file","reads"), delim = " "),
+            `ITS` = read_delim(here("out", "sequence_counts", "pre_demultiplexing", "ITS.txt"), col_names = c("file","reads"), delim = " ")
+        )
         
     # after demultiplexing
         
         reads$post_demultiplexing <- list(
-            `16S` = read_delim(here("out", "combined", "sequence_counts", "post_demultiplexing_seqs_16S.txt"), col_names = c("sample","reads"), delim = " "),
-            `ITS` = read_delim(here("out", "combined", "sequence_counts", "post_demultiplexing_seqs_ITS.txt"), col_names = c("sample","reads"), delim = " ")
+            `16S` = read_delim(here("out", "sequence_counts", "post_demultiplexing", "16S.txt"), col_names = c("sample","reads"), delim = " "),
+            `ITS` = read_delim(here("out", "sequence_counts", "post_demultiplexing", "ITS.txt"), col_names = c("sample","reads"), delim = " ")
         )
         
     # after demultiplexing and filtering
         
         reads$post_demultiplexing_noNs <- list(
-            `16S` = read_delim(here("out", "combined", "sequence_counts", "post_demultiplexing_noNs_seqs_16S.txt"), col_names = c("sample","reads"), delim = " "),
-            `ITS` = read_delim(here("out", "combined", "sequence_counts", "post_demultiplexing_noNs_seqs_ITS.txt"), col_names = c("sample","reads"), delim = " ")
+            `16S` = read_delim(here("out", "sequence_counts", "post_demultiplexing_noNs", "16S.txt"), col_names = c("sample","reads"), delim = " "),
+            `ITS` = read_delim(here("out", "sequence_counts", "post_demultiplexing_noNs", "ITS.txt"), col_names = c("sample","reads"), delim = " ")
         )
         
     # after cutadapt
     
         reads$post_cutadapt <- list(
-            `16S` = read_delim(here("out", "combined", "sequence_counts", "post_cutadapt_seqs_16S.txt"), col_names = c("sample","reads"), delim = " "),
-            `ITS` = read_delim(here("out", "combined", "sequence_counts", "post_cutadapt_seqs_ITS.txt"), col_names = c("sample","reads"), delim = " ")
+            `16S` = read_delim(here("out", "sequence_counts", "post_cutadapt", "16S.txt"), col_names = c("sample","reads"), delim = " "),
+            `ITS` = read_delim(here("out", "sequence_counts", "post_cutadapt", "ITS.txt"), col_names = c("sample","reads"), delim = " ")
         )
         
     # post filter and trim
     
         reads$post_filterAndTrim <- list(
-            `16S` = read_delim(here("out", "combined", "sequence_counts", "post_filterAndTrim_seqs_16S.txt"), col_names = c("sample","reads"), delim = " "),
-            `ITS` = read_delim(here("out", "combined", "sequence_counts", "post_filterAndTrim_seqs_ITS.txt"), col_names = c("sample","reads"), delim = " ")
+            `16S` = read_delim(here("out", "sequence_counts", "post_filterAndTrim", "16S.txt"), col_names = c("sample","reads"), delim = " "),
+            `ITS` = read_delim(here("out", "sequence_counts", "post_filterAndTrim", "ITS.txt"), col_names = c("sample","reads"), delim = " ")
         )
         
     # post dada
         
         reads$post_dada <- list(
-            `16S` = read_delim(here("out", "combined", "sequence_counts", "post_dada_sequencetable_16S.txt"), delim = " "),
-            `ITS` = read_delim(here("out", "combined", "sequence_counts", "post_dada_sequencetable_ITS.txt"), delim = " ")
+            `16S` = read_delim(here("out", "sequence_counts", "post_dada", "16S.txt"), delim = " "),
+            `ITS` = read_delim(here("out", "sequence_counts", "post_dada", "ITS.txt"), delim = " ")
         )
         
     # post chimeras
         
         reads$post_remove_chimeras <- list(
-            `16S` = read_delim(here("out", "combined", "sequence_counts", "post_remove_chimeras_sequencetable_16S.txt"), delim = " "),
-            `ITS` = read_delim(here("out", "combined", "sequence_counts", "post_remove_chimeras_sequencetable_ITS.txt"), delim = " ")
+            `16S` = read_delim(here("out", "sequence_counts", "post_chimeras", "16S.txt"), delim = " "),
+            `ITS` = read_delim(here("out", "sequence_counts", "post_chimeras", "ITS.txt"), delim = " ")
         )
         
     # post export to phyloseq (should be the same)
         
         reads$post_export_phyloseq <- list(
-            `16S` = read_delim(here("out", "combined", "sequence_counts", "post_export_phyloseq_16S.txt"), delim = " "),
-            `ITS` = read_delim(here("out", "combined", "sequence_counts", "post_export_phyloseq_ITS.txt"), delim = " ")
+            `16S` = read_delim(here("out", "sequence_counts", "post_phyloseq", "16S", "phyloseq.txt"), delim = " "),
+            `16S_cleaned` = read_delim(here("out", "sequence_counts", "post_phyloseq", "16S", "phyloseq_cleaned.txt"), delim = " "),
+            `ITS` = read_delim(here("out", "sequence_counts", "post_phyloseq", "ITS", "phyloseq.txt"), delim = " ")
         )
     
     # post normalize (should be the same)
     
         reads$post_export_phyloseq_normalized <- list(
-            `16S` = read_delim(here("out", "combined", "sequence_counts", "post_export_phyloseq_normalized_16S.txt"), delim = " "),
-            `ITS` = read_delim(here("out", "combined", "sequence_counts", "post_export_phyloseq_normalized_ITS.txt"), delim = " ")
+            `16S` = read_delim(here("out", "sequence_counts", "post_normalize", "16S.txt"), delim = " "),
+            `ITS` = read_delim(here("out", "sequence_counts", "post_normalize", "ITS.txt"), delim = " ")
         )
 
-################################
+##################################
+# code below needs to be revised #
+##################################
 ## collate data
         
     stage.order <- c("before demultiplexing", "after demultiplexing", "after filtering Ns", "after cutadapt", "after filterAndTrim", "after dada", "after removing chimeras", "after exporting to phyloseq", "after normalizing")
@@ -101,10 +97,6 @@ library("writexl")
             ), .id = "stage") %>%
         select(dataset, everything())
         
-        reads_by_sample <- reads_by_sample %>%
-            mutate(project = ifelse(substr(sample,1,3) %in% c("NTR","STR"), "SERDP-RDX", "Respiration TX Range")) %>%
-            mutate(project = factor(project))
-
     # calculate totals and add pre-demultiplexing data
 
         read_totals <- bind_rows(
@@ -141,38 +133,12 @@ library("writexl")
         ggsave(here("figures", "reads_per_dataset_fraction.pdf"), width = 6, height = 5)
         
     # reads_by_sample
-    # excludes dropout at demultiplexing since this can't be broken down by project
         
-        read_dropout_by_project <- reads_by_sample %>%
-            group_by(dataset, project, stage) %>%
-            summarize(reads = sum(reads), .groups = "drop") %>%
-            mutate(stage = factor(stage, levels = stage.order)) %>% 
-            arrange(dataset, project, stage) %>%
-            group_by(dataset, project) %>%
-            mutate(read_loss_fraction = 1 - reads/dplyr::lag(reads, n=1, order_by=stage))
-
-        # plot total reads per project through the pipeline
-        read_dropout_by_project %>% ggplot(aes(x = stage, y= reads)) + geom_bar(stat = "identity") + facet_grid(project ~ dataset) +
-            theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust=0)) +
-            labs (x = "Pipeline stage", y= "Total remaining reads") +
-            scale_y_continuous(labels = label_number(suffix = " M", scale = 1e-6)) +  # show y-axis in millions 
-            ggtitle("Total reads per project") +
-            theme(plot.margin = margin(t = 10, r = 50, b = 10, l = 10, unit = "pt"))
-        ggsave(here("figures", "reads_per_project_total.pdf"), width = 6, height = 5)
-        
-        # plot per-project read dropout through the pipeline
-        read_dropout_by_project %>% ggplot(aes(x = stage, y= read_loss_fraction)) + geom_bar(stat = "identity") + facet_grid(project ~ dataset) +
-            theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust=0)) +
-            labs (x = "Pipeline stage", y= "Fraction of remaining reads dropping out") +
-            ggtitle("Read dropout per project") +
-            theme(plot.margin = margin(t = 10, r = 50, b = 10, l = 10, unit = "pt"))
-        ggsave(here("figures", "reads_per_project_dropout_fraction.pdf"), width = 6, height = 5)
-
         # plot total reads per sample through the pipeline
         reads_by_sample %>%
             mutate(stage = factor(stage, levels = stage.order)) %>% 
-            arrange(dataset, project, stage) %>%
-            ggplot(aes(x = stage, y= reads)) + geom_boxplot() + facet_grid(project ~ dataset) +
+            arrange(dataset, stage) %>%
+            ggplot(aes(x = stage, y= reads)) + geom_boxplot() + facet_grid( ~ dataset) +
             theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust=0)) +
             labs (x = "Pipeline stage", y= "Remaining reads per sample") +
             scale_y_continuous(labels = label_number(suffix = " K", scale = 1e-3)) + # show y-axis in thousands
@@ -183,15 +149,11 @@ library("writexl")
         # plot per-sample read dropout through the pipeline
         reads_by_sample %>%
             mutate(stage = factor(stage, levels = stage.order)) %>% 
-            group_by(dataset, project, sample) %>%
+            group_by(dataset, sample) %>%
             mutate(read_loss_fraction = 1 - reads/dplyr::lag(reads, n=1, order_by=stage)) %>%
-            ggplot(aes(x = stage, y= read_loss_fraction)) + geom_boxplot() + facet_grid(project ~ dataset) +
+            ggplot(aes(x = stage, y= read_loss_fraction)) + geom_boxplot() + facet_grid( ~ dataset) +
             theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust=0)) +
             labs (x = "Pipeline stage", y= "Fraction of remaining reads dropping out") +
             ggtitle("Read dropout per sample") +
             theme(plot.margin = margin(t = 10, r = 50, b = 10, l = 10, unit = "pt"))
         ggsave(here("figures", "reads_per_sample_dropout_fraction.pdf"), width = 6, height = 5)
-        
-        
-        
-        
