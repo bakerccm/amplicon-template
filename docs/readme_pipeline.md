@@ -14,7 +14,7 @@ The workflow is implemented here using the [Snakemake](https://snakemake.readthe
  - supports flexible parallelization, which is especially useful for scaling the pipeline to larger datasets in a high-performance computing environment;
  - facilitates reproducibility by specifying software environments using [yaml files](/envs), and optionally automating the installation of those environments through Snakemake's interface with conda.
 
-The pipeline runs with Snakemake v7.18.2 as specified in [envs/snakemake.yaml](/envs/snakemake.yaml).
+The pipeline runs with Snakemake v7.25.0 as specified in [envs/snakemake-7.25.0.yaml](/envs/snakemake-7.25.0.yaml).
 
 ### Input files
 

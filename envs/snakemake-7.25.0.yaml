@@ -1,4 +1,4 @@
-name: snakemake
+name: snakemake-7.25.0
 channels:
  - bioconda
  - conda-forge
