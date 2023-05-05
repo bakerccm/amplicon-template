@@ -2,7 +2,7 @@
 
 # Chris Baker
 # https://github.com/bakerccm
-# 23 March 2023
+# 28 April 2023
 
 from snakemake.utils import min_version
 min_version("7.25.0")
