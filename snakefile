@@ -613,7 +613,7 @@ rule sequence_counts_post_demultiplexing:
 
 rule aggregate_sequence_counts_post_demultiplexing:
     input:
-        lambda wildcards: [os.path.join("out", "sequence_counts", "post_demultiplexing", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcard.dataset]]
+        lambda wildcards: [os.path.join("out", "sequence_counts", "post_demultiplexing", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcards.dataset]]
     output:
         "out/sequence_counts/post_demultiplexing/{dataset}.txt"
     shell:
@@ -638,7 +638,7 @@ rule sequence_counts_post_demultiplexing_and_filtering:
 
 rule aggregate_sequence_counts_post_demultiplexing_and_filtering:
     input:
-        lambda wildcards: [os.path.join("out", "sequence_counts", "post_demultiplexing_noNs", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcard.dataset]]
+        lambda wildcards: [os.path.join("out", "sequence_counts", "post_demultiplexing_noNs", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcards.dataset]]
     output:
         "out/sequence_counts/post_demultiplexing_noNs/{dataset}.txt"
     shell:
@@ -663,7 +663,7 @@ rule sequence_counts_post_cutadapt:
 
 rule aggregate_sequence_counts_post_cutadapt:
     input:
-        lambda wildcards: [os.path.join("out", "sequence_counts", "post_cutadapt", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcard.dataset]]
+        lambda wildcards: [os.path.join("out", "sequence_counts", "post_cutadapt", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcards.dataset]]
     output:
         "out/sequence_counts/post_cutadapt/{dataset}.txt"
     shell:
@@ -688,7 +688,7 @@ rule sequence_counts_post_filter_and_trim:
 
 rule aggregate_sequence_counts_post_filter_and_trim:
     input:
-        lambda wildcards: [os.path.join("out", "sequence_counts", "post_filterAndTrim", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcard.dataset]]
+        lambda wildcards: [os.path.join("out", "sequence_counts", "post_filterAndTrim", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcards.dataset]]
     output:
         "out/sequence_counts/post_filterAndTrim/{dataset}.txt"
     shell:
