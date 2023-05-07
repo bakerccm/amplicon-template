@@ -470,11 +470,6 @@ rule decipher:
         'Rscript code/decipher.R {input.sequence_table} {input.decipher_ref} {output} >{log}'
 
 ################################
-# track sequences through the pipeline
-
-
-
-################################
 # export as phyloseq object
 
 rule all_export_to_phyloseq:
