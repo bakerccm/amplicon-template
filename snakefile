@@ -42,7 +42,7 @@ rule all:
         expand('out/{dataset}/demultiplexed/multiqc_report.html', dataset = DATASETS),
         [os.path.join('out', dataset, 'read_quality_profiles', sample + '.pdf') 
             for dataset in DATASETS 
-            for sample in SAMPLES[dataset]]
+            for sample in SAMPLES[dataset]],
         "out/combined/amplicon_normalized.rdata"
 
 ################################
