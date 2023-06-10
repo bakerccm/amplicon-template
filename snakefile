@@ -528,6 +528,7 @@ rule remove_chloroplasts:
 ################################
 # Note: SEPP needs to be installed separately (not through conda) in the `/software/sepp-package` folder.
 # The `sepp_env` conda environment provides a suitable runtime environment but does not actually install SEPP.
+# The script `scripts/install_sepp.sh` provides suitable commands for installing SEPP.
 rule run_sepp:
     input:
         "out/16S/phyloseq/phyloseq_cleaned.fasta"

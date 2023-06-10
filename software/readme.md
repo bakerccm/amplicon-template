@@ -1,0 +1,1 @@
+Use the script at `scripts/install_sepp.sh` to install SEPP in this folder.
