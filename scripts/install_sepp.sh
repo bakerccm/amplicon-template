@@ -20,3 +20,4 @@ cd sepp-package/sepp
 python setup.py config -c
 
 echo "SEPP installation complete"
+echo "You may now want to remove software/sepp-package.tar.bz"
