@@ -2,4 +2,5 @@ name: illumina-utils-2.12
 channels:
  - bioconda
 dependencies:
+ - python<3.11
  - illumina-utils=2.12
