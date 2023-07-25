@@ -125,7 +125,7 @@ rule demultiplex_multiqc:
     log:
         'out/{dataset}/demultiplexed/multiqc_report.log'
     conda:
-        'envs/multiqc.yaml'
+        'envs/multiqc-1.14.yaml'
     shell:
         'multiqc --interactive -o {params.outputdir} {params.inputdir} 2>{log}'
 
