@@ -583,7 +583,7 @@ rule get_all_sequence_counts:
 
 rule sequence_counts_pre_demultiplexing:
     input:
-        config['raw_data'][dataset]['read1']
+        lambda wildcards: config['raw_data'][wildcards.dataset]['read1']
     output:
         "out/sequence_counts/pre_demultiplexing/{dataset}.txt"
     shell:
