@@ -18,7 +18,7 @@ To reproduce our analysis results, this GitHub repo needs to be augmented with o
 
  The raw sequence data files are not included in the GitHub repo (although the sample [metadata](/metadata) are). The sequence data should be obtained following the instructions in [data/readme.md](/data/readme.md). The checksums for the downloaded files should be compared against the values in [data/md5sums.txt](/data/md5sums.txt).
 
- Shell commands to download the data are included at [data/download.sh](/data/download.sh).
+ Shell commands to download the data are included at [scripts/download_data.sh](/scripts/download_data.sh).
 
 ### Reference databases
 
@@ -26,7 +26,7 @@ To reproduce our analysis results, this GitHub repo needs to be augmented with o
 
  These databases are not included in the GitHub repo and should be downloaded according to the instructions in [databases/readme.md](/databases/readme.md). The checksums for the downloaded files should be compared against the values in [databases/md5sums.txt](/databases/md5sums.txt).
 
- Shell commands to download the data are included at [databases/download.sh](/databases/download.sh).
+ Shell commands to download the data are included at [scripts/download_databases.sh](/scripts/download_databases.sh).
 
 ## Code reuse
 
