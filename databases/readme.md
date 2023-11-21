@@ -1,5 +1,7 @@
 # Taxonomic Databases
 
+See [scripts/download_databases.sh](../scripts/download_databases.sh) for code to download databases.
+
 General information on training sets for use with dada2: https://benjjneb.github.io/dada2/training.html
 
 ## Silva 138.1 prokaryotic SSU taxonomic training data formatted for DADA2
@@ -36,16 +38,14 @@ See [this page](https://zenodo.org/record/4310151#.YMEX9C1r3UI) for notes and do
   
   Callahan, Benjamin. (2020). RDP taxonomic training data formatted for DADA2 (RDP trainset 18/release 11.5) [Data set]. Zenodo. [DOI:10.5281/zenodo.4310151](http://doi.org/10.5281/zenodo.4310151)
   
-## UNITE ITS database (Version 8.3 2021-05-10)
+## UNITE ITS database (Version 9.0 2023-07-25)
 
 See [this page](https://unite.ut.ee/repository.php) for notes and download links (use general FASTA releases with DADA2)
 
-  Fungi, includes global and 97% singletons: [https://doi.org/10.15156/BIO/1280089](https://doi.org/10.15156/BIO/1280089)
+  Fungi, includes global and 97% singletons: [https://doi.org/10.15156/BIO/2938068](https://doi.org/10.15156/BIO/2938068)
 
-  Downloads: [https://plutof.ut.ee/#/doi/10.15156/BIO/1280089](https://plutof.ut.ee/#/doi/10.15156/BIO/1280089)
-
-  - Use with ITS and assignTaxonomy(): [download](https://files.plutof.ut.ee/public/orig/6A/F9/6AF94919CCB48307734D6256CACA50AE1ECBC0839F644D4B661E3673525E41A4.tgz) (md5: 51ffc4ab953c2036f72ac5b6cd06f168) This downloads as a tar archive (.tgz) which extracts to a directory `sh_general_release_s_10.05.2021` with two files in it: `sh_general_release_dynamic_s_10.05.2021_dev.fasta` (md5:7f6cdd2dc1b64f115df05abde221b377) and `sh_general_release_dynamic_s_10.05.2021.fasta` (md5:1a3125790488fd74aa5b6ef3d6e9ae79). The 'dev' version apparently contains sequence flanking ITS which is removed in the other fasta file. Some classifiers (e.g. the old QIIME2 classifier) are better trained on the full length sequences. May need to experiment with the RDP classifier in dada2.
+  - Use with ITS and assignTaxonomy(): [download](https://files.plutof.ut.ee/public/orig/F6/7D/F67DDF951A780D041DE915EBC6A0C006C1F8E9ECB7F3158BC8FEB32963CFF748.tgz) (md5: 4ceb511e0376295b7dad55b7e723367b) This downloads as a tar archive (.tgz) which extracts to two files: sh_general_release_dynamic_s_25.07.2023_dev.fasta (md5: 2e1789cad6e15a88d518a06f60ad1b47) and sh_general_release_dynamic_s_25.07.2023.fasta (md5: 3c7f6b7e826a3fe1de5ad06f128fc556). The 'dev' version apparently contains sequence flanking ITS which is removed in the other fasta file. Some classifiers (e.g. the old QIIME2 classifier) are better trained on the full length sequences. May need to experiment with the RDP classifier in dada2.
 
   Citation:
 
-  Abarenkov, Kessy; Zirk, Allan; Piirmann, Timo; Pöhönen, Raivo; Ivanov, Filipp; Nilsson, R. Henrik; Kõljalg, Urmas (2021): UNITE general FASTA release for Fungi 2. Version 10.05.2021. UNITE Community. [DOI:10.15156/BIO/1280089](https://doi.org/10.15156/BIO/1280089)
+  Abarenkov, Kessy; Zirk, Allan; Piirmann, Timo; Pöhönen, Raivo; Ivanov, Filipp; Nilsson, R. Henrik; Kõljalg, Urmas (2023): UNITE general FASTA release for Fungi 2. UNITE Community. [DOI:10.15156/BIO/2938068](https://doi.org/10.15156/BIO/2938068)

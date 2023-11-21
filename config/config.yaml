@@ -58,7 +58,7 @@ databases:
     assignTaxonomy:
         silva: 'databases/silva_nr99_v138.1_train_set.fa.gz'
         rdp: 'databases/rdp_train_set_18.fa.gz'
-        unite: 'databases/sh_general_release_s_10.05.2021/sh_general_release_dynamic_s_10.05.2021.fasta.gz' # alternatively, consider using the dev version at sh_general_release_dynamic_s_10.05.2021_dev.fasta
+        unite: 'databases/sh_general_release_dynamic_s_25.07.2023.fasta.gz' # alternatively, consider using the dev version at sh_general_release_dynamic_s_25.07.2023_dev.fasta.gz
     assignSpecies:
         silva: 'databases/silva_species_assignment_v138.1.fa.gz'
         rdp: 'databases/rdp_species_assignment_18.fa.gz'

@@ -1,5 +1,7 @@
 # Raw data for SERDP RDX project
 
+See [scripts/download_data.sh](../scripts/download_data.sh) for code to download the sequence data.
+
 ## Amplicon sequence data
 
 Raw sequencing data are not supplied in the GitHub repo and need to be supplied separately before running the pipeline.
