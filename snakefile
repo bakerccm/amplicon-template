@@ -739,7 +739,7 @@ rule sequence_counts_post_phyloseq_16S:
         phyloseq_cleaned = "out/16S/phyloseq/phyloseq_cleaned.rds"
     output:
         phyloseq = "out/sequence_counts/post_phyloseq/16S/phyloseq.txt",
-        phyloseq_cleaned = "out/sequence_counts/post_phyloseq/16S/phyloseq_cleaned.rds"
+        phyloseq_cleaned = "out/sequence_counts/post_phyloseq/16S/phyloseq_cleaned.txt"
     params:
         output_dir = "out/sequence_counts/post_phyloseq/16S"
     conda:
