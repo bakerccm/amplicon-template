@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# N.B. In principle this file should run when executed as a shell script.
+# In practice individual commands often fail e.g. if the remote server
+# rejects a request that comes too quickly after the last one, or if
+# remote server is temporarily unavailable. It may be easier to run the
+# individually.
+
 # assumes starting from root of repository
     cd databases
 
