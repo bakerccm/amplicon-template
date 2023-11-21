@@ -16,17 +16,15 @@
     wget https://zenodo.org/record/4310151/files/rdp_species_assignment_18.fa.gz
 
 # use with ITS and assignTaxonomy()
-    wget https://files.plutof.ut.ee/public/orig/6A/F9/6AF94919CCB48307734D6256CACA50AE1ECBC0839F644D4B661E3673525E41A4.tgz
-    tar -xf 6AF94919CCB48307734D6256CACA50AE1ECBC0839F644D4B661E3673525E41A4.tgz
-    #
-    # this extracts to a folder sh_general_release_s_10.05.2021, i.e.
-    #
-    # tree sh_general_release_s_10.05.2021
-    # sh_general_release_s_10.05.2021
-    # ├── sh_general_release_dynamic_s_10.05.2021_dev.fasta
-    # └── sh_general_release_dynamic_s_10.05.2021.fasta
-    #
+    wget https://files.plutof.ut.ee/public/orig/F6/7D/F67DDF951A780D041DE915EBC6A0C006C1F8E9ECB7F3158BC8FEB32963CFF748.tgz
+
+    # extract files from tarball
+    tar -xf F67DDF951A780D041DE915EBC6A0C006C1F8E9ECB7F3158BC8FEB32963CFF748.tgz
+
+    # this extracts to two files: 
+    #     sh_general_release_dynamic_s_25.07.2023_dev.fasta
+    #     sh_general_release_dynamic_s_25.07.2023.fasta
+
     # recompress individual files
-    cd sh_general_release_s_10.05.2021
-    gzip sh_general_release_dynamic_s_10.05.2021_dev.fasta # replaces with .fasta.gz
-    gzip sh_general_release_dynamic_s_10.05.2021.fasta # replaces with .fasta.gz
+    gzip sh_general_release_dynamic_s_25.07.2023_dev.fasta # replaces with .fasta.gz
+    gzip sh_general_release_dynamic_s_25.07.2023.fasta # replaces with .fasta.gz
