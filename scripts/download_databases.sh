@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# assumes starting from root of repository
+    cd databases
+
 # use with 16S and assignTaxonomy()
     wget https://zenodo.org/record/4587955/files/silva_nr99_v138.1_train_set.fa.gz
 # use with 16S and assignTaxonomy()
