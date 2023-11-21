@@ -604,7 +604,7 @@ rule sequence_counts_post_demultiplexing:
         '''
         SAMPLE=`basename {input} -R1.fastq.gz`
         SEQS=`echo $(zcat {input} | wc -l)/4|bc`
-        echo ${SAMPLE} ${SEQS} >{output}
+        echo ${{SAMPLE}} ${{SEQS}} >{output}
         '''
 
 rule aggregate_sequence_counts_post_demultiplexing:
@@ -629,7 +629,7 @@ rule sequence_counts_post_demultiplexing_and_filtering:
         '''
         SAMPLE=`basename {input} -R1.fastq.gz`
         SEQS=`echo $(zcat {input} | wc -l)/4|bc`
-        echo ${SAMPLE} ${SEQS} >{output}
+        echo ${{SAMPLE}} ${{SEQS}} >{output}
         '''
 
 rule aggregate_sequence_counts_post_demultiplexing_and_filtering:
@@ -654,7 +654,7 @@ rule sequence_counts_post_cutadapt:
         '''
         SAMPLE=`basename {input} -R1.fastq.gz`
         SEQS=`echo $(zcat {input} | wc -l)/4|bc`
-        echo ${SAMPLE} ${SEQS} >{output}
+        echo ${{SAMPLE}} ${{SEQS}} >{output}
         '''
 
 rule aggregate_sequence_counts_post_cutadapt:
@@ -679,7 +679,7 @@ rule sequence_counts_post_filter_and_trim:
         '''
         SAMPLE=`basename {input} -R1.fastq.gz`
         SEQS=`echo $(zcat {input} | wc -l)/4|bc`
-        echo ${SAMPLE} ${SEQS} >{output}
+        echo ${{SAMPLE}} ${{SEQS}} >{output}
         '''
 
 rule aggregate_sequence_counts_post_filter_and_trim:
@@ -707,7 +707,7 @@ rule sequence_counts_post_dada:
         # make sure folder for output file exists
             mkdir -p `dirname {output}`
         # count sequences in sequence table
-            Rscript sequence_counts_post_dada.R {input} {output}
+            Rscript code/sequence_counts_post_dada.R {input} {output}
         '''
 
 # sequence counts after removing chimeras
@@ -717,14 +717,16 @@ rule sequence_counts_post_chimeras:
         "out/{dataset}/remove_chimeras/sequence_table.rds"
     output:
         "out/sequence_counts/post_chimeras/{dataset}.txt"
+    params:
+        output_dir = "out/sequence_counts/post_chimeras"
     conda:
         'envs/dada2-1.18.0.yaml'
     shell:
         '''
         # make sure folder for output file exists
-            mkdir -p `dirname {output}`
+            mkdir -p {params.output_dir}
         # count sequences in sequence table
-            Rscript sequence_counts_post_dada.R {input} {output}
+            Rscript code/sequence_counts_post_dada.R {input} {output}
         '''
 
 # sequence counts after exporting to phyloseq (should be the same as post-chimeras)
@@ -738,15 +740,17 @@ rule sequence_counts_post_phyloseq_16S:
     output:
         phyloseq = "out/sequence_counts/post_phyloseq/16S/phyloseq.txt",
         phyloseq_cleaned = "out/sequence_counts/post_phyloseq/16S/phyloseq_cleaned.rds"
+    params:
+        output_dir = "out/sequence_counts/post_phyloseq/16S"
     conda:
         "envs/phyloseq.yaml"
     shell:
         '''
         # make sure folder for output file exists
-            mkdir -p `dirname {output}`
+            mkdir -p {params.output_dir}
         # count sequences in sequence table
-            Rscript sequence_counts_post_phyloseq.R {input.phyloseq} {output.phyloseq}
-            Rscript sequence_counts_post_phyloseq.R {input.phyloseq_cleaned} {output.phyloseq_cleaned}
+            Rscript code/sequence_counts_post_phyloseq.R {input.phyloseq} {output.phyloseq}
+            Rscript code/sequence_counts_post_phyloseq.R {input.phyloseq_cleaned} {output.phyloseq_cleaned}
         '''
 
 # ... for dataset != "16S"
@@ -758,14 +762,16 @@ for dataset in [d for d in DATASETS if d != "16S"]:
             "out/{dataset}/phyloseq/phyloseq.rds"
         output:
             "out/sequence_counts/post_phyloseq/{dataset}/phyloseq.txt"
+        params:
+            output_dir = "out/sequence_counts/post_phyloseq/{dataset}"
         conda:
             "envs/phyloseq.yaml"
         shell:
             '''
             # make sure folder for output file exists
-                mkdir -p `dirname {output}`
+                mkdir -p {params.output_dir}
             # count sequences in sequence table
-                Rscript sequence_counts_post_phyloseq.R {input} {output}
+                Rscript code/sequence_counts_post_phyloseq.R {input} {output}
             '''
             
 # sequence counts after normalization (should be the same as post-chimeras)
@@ -784,7 +790,7 @@ rule sequence_counts_post_normalize:
         # make sure folder for output files exists
             mkdir -p {params.output_dir}
         # count sequences in sequence table
-            Rscript sequence_counts_post_normalize.R {input} {params.output_dir}
+            Rscript code/sequence_counts_post_normalize.R {input} {params.output_dir}
         '''
 
 ################################
