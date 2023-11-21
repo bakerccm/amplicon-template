@@ -1,5 +1,7 @@
 # Taxonomic Databases
 
+See [scripts/download_databases.sh](../scripts/download_databases.sh) for code to download databases.
+
 General information on training sets for use with dada2: https://benjjneb.github.io/dada2/training.html
 
 ## Silva 138.1 prokaryotic SSU taxonomic training data formatted for DADA2
