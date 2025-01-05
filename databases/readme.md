@@ -49,3 +49,4 @@ See [this page](https://unite.ut.ee/repository.php) for notes and download links
   Citation:
 
   Abarenkov, Kessy; Zirk, Allan; Piirmann, Timo; Pöhönen, Raivo; Ivanov, Filipp; Nilsson, R. Henrik; Kõljalg, Urmas (2024): UNITE general FASTA release for Fungi 2. UNITE Community. [DOI:10.15156/BIO/2959333](https://doi.org/10.15156/BIO/2959333)
+

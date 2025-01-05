@@ -38,3 +38,4 @@
     # recompress individual files
     gzip sh_general_release_dynamic_s_04.04.2024_dev.fasta # replaces with .fasta.gz
     gzip sh_general_release_dynamic_s_04.04.2024.fasta # replaces with .fasta.gz
+
