@@ -1,6 +1,6 @@
 datasets:
-    16S
-    ITS
+    - 16S
+    - ITS
 
 sample_metadata:
     16S: "metadata/samples_16S.tsv"
@@ -11,13 +11,13 @@ sample_metadata:
 # input files can be gzipped
 raw_data:
     16S:
-        index: "data/16S_Undetermined_S0_L001_Index_TXRange_SERDP.fastq.gz"
-        read1: "data/16S_Undetermined_S0_L001_R1_TXRange_SERDP.fastq.gz"
-        read2: "data/16S_Undetermined_S0_L001_R2_TXRange_SERDP.fastq.gz"
+        index: "data/file1.fastq.gz"
+        read1: "data/file2.fastq.gz"
+        read2: "data/file3.fastq.gz"
     ITS:
-        index: "data/ITS_Undetermined_S0_L001_Index_TXRange_SERDP.fastq.gz"
-        read1: "data/ITS_Undetermined_S0_L001_R1_TXRange_SERDP.fastq.gz"
-        read2: "data/ITS_Undetermined_S0_L001_R2_TXRange_SERDP.fastq.gz"
+        index: "data/file4.fastq.gz"
+        read1: "data/file5.fastq.gz"
+        read2: "data/file6.fastq.gz"
 
 primers:
     16S:
@@ -27,13 +27,25 @@ primers:
         forward: 'TTGGTCATTTAGAGGAAGTAAAAGTCGTAACAAGGTTTCC' # read 1 sequencing primer (Smith and Peay 2014)
         reverse: 'CGTTCTTCATCGATGCVAGARCCAAGAGATC' # read 2 sequencing primer (Smith and Peay 2014)
 
+# iu-demultiplex parameters
+# to use barcodes as supplied:
+iu-demultiplex: ""
+# to reverse complement barcodes:
+# iu-demultiplex: "--rev-comp-barcodes"
+  
+# multiqc parameters
+# for non-interactive html outputs:
+multiqc: ""
+# for interactive html outputs:
+# multiqc: "--interactive"
+
 # cutadapt parameters
 cutadapt:
     min_length: 50 # force cutadapt to remove sequences shorter than this; should be >0 to avoid downstream problems in dada2
 
-# dada2::filterAndTrim parameters
+# dada2::fastqPairedFilter parameters
 # note values for maxEE and truncLen are supplied separately for read1 and read2 here and converted to vectors in R
-filterAndTrim:
+fastqPairedFilter:
     16S:
         maxN: 0 # dada2 requires reads with no Ns
         truncQ: 2 # [default 2] truncate reads at the first instance of a quality score less than or equal to truncQ
@@ -58,9 +70,18 @@ databases:
     assignTaxonomy:
         silva: 'databases/silva_nr99_v138.1_train_set.fa.gz'
         rdp: 'databases/rdp_train_set_18.fa.gz'
-        unite: 'databases/sh_general_release_s_10.05.2021/sh_general_release_dynamic_s_10.05.2021.fasta.gz' # alternatively, consider using the dev version at sh_general_release_dynamic_s_10.05.2021_dev.fasta
+        unite: 'databases/sh_general_release_dynamic_s_04.04.2024.fasta.gz' # alternatively, consider using the dev version at sh_general_release_dynamic_s_04.04.2024_dev.fasta.gz
     assignSpecies:
         silva: 'databases/silva_species_assignment_v138.1.fa.gz'
         rdp: 'databases/rdp_species_assignment_18.fa.gz'
     DECIPHER:
         silva: 'databases/SILVA_SSU_r138_2019.RData'
+
+assignTaxonomy:
+    threads: 8
+
+decipher:
+    threads: 8
+
+sepp:
+    threads: 14

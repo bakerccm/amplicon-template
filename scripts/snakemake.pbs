@@ -1,0 +1,25 @@
+#!/bin/bash
+
+## Add your subproject ID here
+## Thurston subproject is ERDCH51863EOB 
+#PBS -A <your subproject ID>
+
+#PBS -q standard
+#PBS -l select=1:ncpus=192:mpiprocs=192
+#PBS -l walltime=02:00:00
+
+## see $SAMPLES_HOME/Application_Name/README and $SAMPLES_HOME/Application_Name/application_names
+#PBS -l application=other
+
+#PBS -N snakemake
+#PBS -o pbs/snakemake.out
+#PBS -e pbs/snakemake.err
+
+## Replace 'amplicon-template' with the name for your folder
+cd ${WORKDIR}/amplicon-template
+
+source activate snakemake-7.25.0
+
+snakemake -c 192 --use-conda all
+
+exit

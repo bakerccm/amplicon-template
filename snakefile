@@ -2,26 +2,20 @@
 
 # Chris Baker
 # https://github.com/bakerccm
-# 28 April 2023
+# 1 November 2023
 
 from snakemake.utils import min_version
 min_version("7.25.0")
 
-################################
-## get config file
-
 configfile: 'config/config.yaml'
 
-################################
-## wildcard constraints
-
 wildcard_constraints:
-    sample = '[^/\.]+',
-    file = '[^/\.]+',
+    sample = '[^/.]+',
+    file = '[^/.]+',
     read = 'R[12]'
 
 ################################
-## get sample metadata
+# get sample metadata
 
 import pandas as pd
 import os # for os.path.join()
@@ -30,6 +24,7 @@ DATASETS = config['datasets'] # 16S, ITS etc
 
 METADATA = {} # dict of metadata tables
 SAMPLES = {} # dict of sample id lists
+
 for dataset in DATASETS:
     METADATA[dataset] = pd.read_csv(config['sample_metadata'][dataset], sep = '\t', index_col = 'SampleID')
     SAMPLES[dataset] = list(METADATA[dataset].index)
@@ -39,18 +34,19 @@ for dataset in DATASETS:
 
 rule all:
     input:
-        expand('out/{dataset}/demultiplexed/multiqc_report.html', dataset = DATASETS),
+        expand('out/{dataset}/demultiplexed_qc/multiqc_report.html', dataset = DATASETS),
         [os.path.join('out', dataset, 'read_quality_profiles', sample + '.pdf') 
             for dataset in DATASETS 
             for sample in SAMPLES[dataset]],
-        "out/combined/amplicon_normalized.rdata"
+        "out/combined/amplicon.rds",
+        "out/sequence_counts/summary/aggregated.csv"
 
 ################################
 # demultiplex samples and run qc on demultiplexed files
 
 rule all_demultiplex_qc:
     input:
-        expand('out/{dataset}/demultiplexed/multiqc_report.html', dataset = DATASETS)
+        expand('out/{dataset}/demultiplexed_qc/multiqc_report.html', dataset = DATASETS)
 
 # make barcode lists from metadata files
 # N.B. pulls out first column (should be sample) and fourth column (should be barcode) but
@@ -59,10 +55,10 @@ rule barcode_list:
     input:
         lambda wildcards: config['sample_metadata'][wildcards.dataset]
     output:
-        'out/{dataset}/demultiplexed/barcodes.txt'
+        'out/{dataset}/barcodes.txt'
     shell:
         '''
-        awk 'BEGIN {{OFS="\t"}} !(NR==1) {{print $1,$4}}' {input} >{output}
+        awk 'BEGIN {{FS="\t";OFS="\t"}} !(NR==1) {{print $1,$4}}' {input} >{output}
         '''
 
 # generates a demultiplex rule for each dataset
@@ -75,7 +71,7 @@ for dataset in DATASETS:
         name:
             'demultiplex_' + dataset
         input:
-            barcodes = os.path.join('out', dataset, 'demultiplexed', 'barcodes.txt'),
+            barcodes = os.path.join('out', dataset, 'barcodes.txt'),
             read1 = config['raw_data'][dataset]['read1'],
             read2 = config['raw_data'][dataset]['read2'],
             index = config['raw_data'][dataset]['index']
@@ -88,7 +84,24 @@ for dataset in DATASETS:
         conda:
             'envs/illumina-utils-2.12.yaml'
         shell:
-            'iu-demultiplex -s {input.barcodes} --r1 {input.read1} --r2 {input.read2} --index {input.index} -o {params.output_dir}'
+            '''
+            # delete any existing output files
+                for file in {output}
+                do
+                    rm -f ${{file}}
+                done
+            # demultiplex raw data files
+                iu-demultiplex -s {input.barcodes} --r1 {input.read1} --r2 {input.read2} \
+                    --index {input.index} -o {params.output_dir} {config[iu-demultiplex]}
+            # create empty files for any samples that did not have reads
+                for file in {output}
+                do
+                    if [ ! -f ${{file}} ]
+                    then
+                        touch ${{file}}
+                    fi
+                done
+            '''
 
 rule compress_demultiplexed_fastq:
     input:
@@ -102,10 +115,9 @@ rule demultiplex_fastqc:
     input:
         'out/{dataset}/demultiplexed/{sample}-{read}.fastq.gz'
     output:
-        'out/{dataset}/demultiplexed/{sample}-{read}_fastqc.html',
-        'out/{dataset}/demultiplexed/{sample}-{read}_fastqc.zip'
+        'out/{dataset}/demultiplexed_qc/{sample}-{read}_fastqc.html'
     params:
-        output_dir='out/{dataset}/demultiplexed'
+        output_dir='out/{dataset}/demultiplexed_qc'
     conda:
         'envs/fastqc-0.11.9.yaml'
     shell:
@@ -114,20 +126,20 @@ rule demultiplex_fastqc:
 # N.B. this rule asks for fastqc files for all demultiplexed samples
 rule demultiplex_multiqc:
     input:
-        fastqc = lambda wildcards: [os.path.join('out', wildcards.dataset, 'demultiplexed', sample + '-' + read + '_fastqc.zip') 
+        fastqc = lambda wildcards: [os.path.join('out', wildcards.dataset, 'demultiplexed_qc', sample + '-' + read + '_fastqc.html') 
             for sample in SAMPLES[wildcards.dataset]
             for read in ['R1','R2']]
     output:
-        'out/{dataset}/demultiplexed/multiqc_report.html'
+        'out/{dataset}/demultiplexed_qc/multiqc_report.html'
     params:
-        inputdir = 'out/{dataset}/demultiplexed',
-        outputdir = 'out/{dataset}/demultiplexed'
+        inputdir = 'out/{dataset}/demultiplexed_qc',
+        outputdir = 'out/{dataset}/demultiplexed_qc'
     log:
-        'out/{dataset}/demultiplexed/multiqc_report.log'
+        'out/{dataset}/demultiplexed_qc/multiqc_report.log'
     conda:
-        'envs/multiqc-1.14.yaml'
+        'envs/multiqc-1.22.yaml'
     shell:
-        'multiqc --interactive -o {params.outputdir} {params.inputdir} 2>{log}'
+        'multiqc {config[multiqc]} --force -o {params.outputdir} {params.inputdir} 2>{log}'
 
 ################################
 # remove Ns and check primer orientation in preparation for running cutadapt
@@ -154,11 +166,24 @@ rule filter_Ns:
         'envs/dada2-1.18.0.yaml'
     shell:
         '''
-        Rscript code/filter_Ns_and_check_primers.R \
-            {input.read1} {input.read2} \
-            {params.primer_fwd} {params.primer_rev} \
-            {output.read1} {output.read2} {output.summary}
+        # test input file and skip processing if empty
+        if [ $(zcat {input.read1} | wc -l) -eq 0 ]
+        then
+            OUTPUT_READ1={output.read1} &&
+                touch ${{OUTPUT_READ1%.gz}} &&
+                gzip ${{OUTPUT_READ1%.gz}}
+            OUTPUT_READ2={output.read2} &&
+                touch ${{OUTPUT_READ2%.gz}} &&
+                gzip ${{OUTPUT_READ2%.gz}}
+            touch {output.summary}
+        else
+            Rscript code/filter_Ns_and_check_primers.R \
+                {input.read1} {input.read2} \
+                {params.primer_fwd} {params.primer_rev} \
+                {output.read1} {output.read2} {output.summary}
+        fi                                                                                           
         '''
+
 
 ################################
 # use cutadapt to remove primers
@@ -185,17 +210,28 @@ rule cutadapt:
         primer_rev = lambda wildcards: config['primers'][wildcards.dataset]['reverse'],
         min_length = config['cutadapt']['min_length']
     conda:
-        'envs/cutadapt-3.5.yaml'
+        'envs/cutadapt-4.6.yaml'
     shell:
         '''
-        # these are the primer sequences
-            primer_fwd={params.primer_fwd}
-            primer_rev={params.primer_rev}
-        # get reverse complements
-            primer_fwd_rc=`echo ${{primer_fwd}} | tr ACGTMRWSYKVHDBNacgtmrwsykvhdbn TGCAKYWSRMBDHVNtgcakywsrmbdhvn | rev`
-            primer_rev_rc=`echo ${{primer_rev}} | tr ACGTMRWSYKVHDBNacgtmrwsykvhdbn TGCAKYWSRMBDHVNtgcakywsrmbdhvn | rev`
-        cutadapt -g ${{primer_fwd}} -a ${{primer_rev_rc}} -G ${{primer_rev}} -A ${{primer_fwd_rc}} -n 2 -m {params.min_length} \
-            -o {output.read1} -p {output.read2} {input.read1} {input.read2} >{log}
+        # test input file and skip processing if empty
+        if [ $(zcat {input.read1} | wc -l) -eq 0 ]
+        then
+            OUTPUT_READ1={output.read1} &&
+                touch ${{OUTPUT_READ1%.gz}} &&
+                gzip ${{OUTPUT_READ1%.gz}}
+            OUTPUT_READ2={output.read2} &&
+                touch ${{OUTPUT_READ2%.gz}} &&
+                gzip ${{OUTPUT_READ2%.gz}}
+        else
+            # these are the primer sequences
+                primer_fwd={params.primer_fwd}
+                primer_rev={params.primer_rev}
+            # get reverse complements
+                primer_fwd_rc=`echo ${{primer_fwd}} | tr ACGTMRWSYKVHDBNacgtmrwsykvhdbn TGCAKYWSRMBDHVNtgcakywsrmbdhvn | rev`
+                primer_rev_rc=`echo ${{primer_rev}} | tr ACGTMRWSYKVHDBNacgtmrwsykvhdbn TGCAKYWSRMBDHVNtgcakywsrmbdhvn | rev`
+            cutadapt -g ${{primer_fwd}} -a ${{primer_rev_rc}} -G ${{primer_rev}} -A ${{primer_fwd_rc}} -n 2 -m {params.min_length} \
+                -o {output.read1} -p {output.read2} {input.read1} {input.read2} >{log}
+        fi
         '''
 
 ################################
@@ -244,19 +280,30 @@ rule filter_and_trim_16S:
         read1 = 'out/16S/filterAndTrim/{sample}-R1.fastq.gz',
         read2 = 'out/16S/filterAndTrim/{sample}-R2.fastq.gz'
     params:
-        maxN = config['filterAndTrim']['16S']['maxN'],
-        truncQ = config['filterAndTrim']['16S']['truncQ'],
-        maxEE_read1 = config['filterAndTrim']['16S']['maxEE_read1'],
-        maxEE_read2 = config['filterAndTrim']['16S']['maxEE_read2'],
-        truncLen_read1 = config['filterAndTrim']['16S']['truncLen_read1'],
-        truncLen_read2 = config['filterAndTrim']['16S']['truncLen_read2']
+        maxN = config['fastqPairedFilter']['16S']['maxN'],
+        truncQ = config['fastqPairedFilter']['16S']['truncQ'],
+        maxEE_read1 = config['fastqPairedFilter']['16S']['maxEE_read1'],
+        maxEE_read2 = config['fastqPairedFilter']['16S']['maxEE_read2'],
+        truncLen_read1 = config['fastqPairedFilter']['16S']['truncLen_read1'],
+        truncLen_read2 = config['fastqPairedFilter']['16S']['truncLen_read2']
     conda:
         'envs/dada2-1.18.0.yaml'
     shell:
         '''
-        Rscript code/filter_and_trim_16S.R \
-            {input.read1} {input.read2} {output.read1} {output.read2} \
-            {params.maxN} {params.truncQ} {params.maxEE_read1} {params.maxEE_read2} {params.truncLen_read1} {params.truncLen_read2}
+        # test input file and skip processing if empty
+        if [ $(zcat {input.read1} | wc -l) -eq 0 ]
+        then
+            OUTPUT_READ1={output.read1} &&
+                touch ${{OUTPUT_READ1%.gz}} &&
+                gzip ${{OUTPUT_READ1%.gz}}
+            OUTPUT_READ2={output.read2} &&
+                touch ${{OUTPUT_READ2%.gz}} &&
+                gzip ${{OUTPUT_READ2%.gz}}
+        else
+            Rscript code/filter_and_trim_16S.R \
+                {input.read1} {input.read2} {output.read1} {output.read2} \
+                {params.maxN} {params.truncQ} {params.maxEE_read1} {params.maxEE_read2} {params.truncLen_read1} {params.truncLen_read2}
+        fi
         '''
 
 rule filter_and_trim_ITS:
@@ -267,18 +314,29 @@ rule filter_and_trim_ITS:
         read1 = 'out/ITS/filterAndTrim/{sample}-R1.fastq.gz',
         read2 = 'out/ITS/filterAndTrim/{sample}-R2.fastq.gz'
     params:
-        maxN = config['filterAndTrim']['ITS']['maxN'],
-        truncQ = config['filterAndTrim']['ITS']['truncQ'],
-        maxEE_read1 = config['filterAndTrim']['ITS']['maxEE_read1'],
-        maxEE_read2 = config['filterAndTrim']['ITS']['maxEE_read2'],
-        minLen = config['filterAndTrim']['ITS']['minLen']
+        maxN = config['fastqPairedFilter']['ITS']['maxN'],
+        truncQ = config['fastqPairedFilter']['ITS']['truncQ'],
+        maxEE_read1 = config['fastqPairedFilter']['ITS']['maxEE_read1'],
+        maxEE_read2 = config['fastqPairedFilter']['ITS']['maxEE_read2'],
+        minLen = config['fastqPairedFilter']['ITS']['minLen']
     conda:
         'envs/dada2-1.18.0.yaml'
     shell:
         '''
-        Rscript code/filter_and_trim_ITS.R \
-            {input.read1} {input.read2} {output.read1} {output.read2} \
-            {params.maxN} {params.truncQ} {params.maxEE_read1} {params.maxEE_read2} {params.minLen}
+        # test input file and skip processing if empty
+        if [ $(zcat {input.read1} | wc -l) -eq 0 ]
+        then
+            OUTPUT_READ1={output.read1} &&
+                touch ${{OUTPUT_READ1%.gz}} &&
+                gzip ${{OUTPUT_READ1%.gz}}
+            OUTPUT_READ2={output.read2} &&
+                touch ${{OUTPUT_READ2%.gz}} &&
+                gzip ${{OUTPUT_READ2%.gz}}
+        else
+            Rscript code/filter_and_trim_ITS.R \
+                {input.read1} {input.read2} {output.read1} {output.read2} \
+                {params.maxN} {params.truncQ} {params.maxEE_read1} {params.maxEE_read2} {params.minLen}
+        fi
         '''
 
 ################################
@@ -358,29 +416,49 @@ rule dada:
     conda:
         'envs/dada2-1.18.0.yaml'
     shell:
-        'Rscript code/dada.R {input.fastq_read1} {input.fastq_read2} {input.error_profile_read1} {input.error_profile_read2} {output} >{log}'
+        '''
+        # test input file and skip processing if empty
+        if [ $(zcat {input.fastq_read1} | wc -l) -eq 0 ]
+        then
+            touch {output}
+        else
+            Rscript code/dada.R {input.fastq_read1} {input.fastq_read2} \
+                {input.error_profile_read1} {input.error_profile_read2} {output} >{log}
+        fi
+        '''
 
 rule all_dada_merge:
     input:
-        expand('out/{dataset}/dada/sequence_table.rds', dataset = DATASETS)
+        expand('out/{dataset}/dada-merge/sequence_table.rds', dataset = DATASETS)
 
 # each dataset runs in ~1min with a single core
 rule dada_merge_samples:
     input:
-        lambda wildcards: [os.path.join('out', wildcards.dataset, 'dada', sample + '.rds') 
+        read1_fastq_files = lambda wildcards: [os.path.join('out', wildcards.dataset, 'learnerrors', 'R1', sample + '-R1.fastq.gz') 
+            for sample in SAMPLES[wildcards.dataset]],
+        rds_files = lambda wildcards: [os.path.join('out', wildcards.dataset, 'dada', sample + '.rds') 
             for sample in SAMPLES[wildcards.dataset]]
     output:
-        sample_list = 'out/{dataset}/dada/sample_list.txt',
-        sequence_table = 'out/{dataset}/dada/sequence_table.rds'
+        sample_list = 'out/{dataset}/dada-merge/sample_list.txt',
+        sequence_table = 'out/{dataset}/dada-merge/sequence_table.rds'
     log:
-        'out/{dataset}/dada/sequence_table.log'
+        'out/{dataset}/dada-merge/sequence_table.log'
     conda:
         'envs/dada2-1.18.0.yaml'
     shell:
         '''
-        # write list of input files
-            rm -rf {output.sample_list}; for i in {input};do echo $i>>{output.sample_list}; done
-        # make sequence table
+        # write list of non-empty input files to file
+            rm -rf {output.sample_list}
+            for READ1_FASTQ_FILE in {input.read1_fastq_files}
+            do
+                SAMPLE=`basename ${{READ1_FASTQ_FILE%-R1.fastq.gz}}`
+                RDS_FILE="out/{wildcards.dataset}/dada/${{SAMPLE}}.rds"
+                if [ $(zcat ${{READ1_FASTQ_FILE}} | wc -l) -gt 0 ]
+                then
+                    echo ${{RDS_FILE}} >>{output.sample_list}
+                fi
+            done
+        # make sequence table from non-empty samples
             Rscript code/merge_samples.R {output.sample_list} {output.sequence_table} >{log}
         '''
 
@@ -398,7 +476,7 @@ rule all_remove_chimeras:
 # each dataset runs in ~1min with a single core
 rule remove_chimeras:
     input:
-        'out/{dataset}/dada/sequence_table.rds'
+        'out/{dataset}/dada-merge/sequence_table.rds'
     output:
         'out/{dataset}/remove_chimeras/sequence_table.rds'
     log:
@@ -431,7 +509,7 @@ rule assign_taxonomy_16S:
         'out/16S/assign_taxonomy/{database}.log'
     conda:
         'envs/dada2-1.18.0.yaml'
-    threads: 2
+    threads: config['assignTaxonomy']['threads']
     shell:
         '''
         Rscript code/assign_taxonomy_16S.R {input.sequence_table} \
@@ -450,7 +528,7 @@ rule assign_taxonomy_ITS:
         'out/ITS/assign_taxonomy/{database}.log'
     conda:
         'envs/dada2-1.18.0.yaml'
-    threads: 2
+    threads: config['assignTaxonomy']['threads']
     shell:
         'Rscript code/assign_taxonomy_ITS.R {input.sequence_table} {input.assignTaxonomy_refFasta} {output} >{log}'
 
@@ -465,7 +543,7 @@ rule decipher:
         'out/16S/decipher/{database}.log'
     conda:
         'envs/dada2-1.18.0-decipher.yaml'
-    threads: 2
+    threads: config['decipher']['threads']
     shell:
         'Rscript code/decipher.R {input.sequence_table} {input.decipher_ref} {output} >{log}'
 
@@ -536,255 +614,273 @@ rule run_sepp:
         "out/16S/phyloseq/phyloseq_cleaned_placement.tog.tre"
     conda:
         "envs/sepp_env.yaml"
-    params:
-        output_prefix="phyloseq_cleaned"
     threads:
-        12
+        config['sepp']['threads']
     shell:
         # running sepp by cd'ing into this directory seems to be the way to do it but it requires some convoluted relative paths to get it to work here
         '''
-        cd software
-        ./sepp-package/run-sepp.sh ../{input} {params.output_prefix} -x {threads}
-        mv *{params.output_prefix}* ../out/16S/phyloseq
+        cd out/16S/phyloseq
+        ../../../software/sepp-package/run-sepp.sh phyloseq_cleaned.fasta phyloseq_cleaned -x {threads}
         '''
 
 ################################
-rule normalize_phyloseq:
+rule combine_data:
     input:
         phyloseq_16S = "out/16S/phyloseq/phyloseq_cleaned.rds",
         sepp_tree_16S = "out/16S/phyloseq/phyloseq_cleaned_placement.tog.tre",
         phyloseq_ITS = "out/ITS/phyloseq/phyloseq.rds"
     output:
-        "out/combined/amplicon_normalized.rdata"
+        "out/combined/amplicon.rds"
     log:
-        "out/combined/amplicon_normalized.log"
+        "out/combined/amplicon.log"
     conda:
        	"envs/phyloseq-tidyverse.yaml"
     shell:
-        "Rscript code/normalize_data.R {input.phyloseq_16S} {input.sepp_tree_16S} {input.phyloseq_ITS} {output} >{log}"
+        "Rscript code/combine_data.R {input.phyloseq_16S} {input.sepp_tree_16S} {input.phyloseq_ITS} {output} >{log}"
 
 ################################
-## get sequence counts at various stages of the pipeline
-
-rule get_all_sequence_counts:
-    input:
-        expand("out/sequence_counts/pre_demultiplexing/{dataset}.txt", dataset = DATASETS),
-        expand("out/sequence_counts/post_demultiplexing/{dataset}.txt", dataset = DATASETS),
-        expand("out/sequence_counts/post_demultiplexing_noNs/{dataset}.txt", dataset = DATASETS),
-        expand("out/sequence_counts/post_cutadapt/{dataset}.txt", dataset = DATASETS),
-        expand("out/sequence_counts/post_filterAndTrim/{dataset}.txt", dataset = DATASETS),
-        expand("out/sequence_counts/post_dada/{dataset}.txt", dataset = DATASETS),
-        expand("out/sequence_counts/post_chimeras/{dataset}.txt", dataset = DATASETS),
-        [os.path.join("out", "sequence_counts", "post_phyloseq", "16S", file + ".txt") for file in ["phyloseq", "phyloseq_cleaned"] if "16S" in DATASETS] + \
-            [os.path.join("out", "sequence_counts", "post_phyloseq", dataset, "phyloseq.txt") for dataset in DATASETS if dataset != "16S"],
-        expand("out/sequence_counts/post_normalize/{dataset}.txt", dataset = DATASETS)
+# get sequence counts at various stages of the pipeline
 
 # sequence counts prior to demultiplexing
 
-rule sequence_counts_pre_demultiplexing:
+rule sequence_counts_before_demultiplexing:
     input:
-        config['raw_data'][dataset]['read1']
+        lambda wildcards: config['raw_data'][wildcards.dataset]['read1']
     output:
-        "out/sequence_counts/pre_demultiplexing/{dataset}.txt"
+        "out/sequence_counts/before_demultiplexing/{dataset}/{dataset}.csv"
     shell:
         '''
+        DATASET={wildcards.dataset}
+        STAGE='before demultiplexing'
         SAMPLE=`basename {input}`
         SEQS=`echo $(zcat {input} | wc -l)/4|bc`
-        echo ${{SAMPLE}} ${{SEQS}} >{output}
+        echo ${{DATASET}},${{STAGE}},${{SAMPLE}},${{SEQS}} >{output}
+        '''
+
+rule aggregate_sequence_counts_before_demultiplexing:
+    input:
+        lambda wildcards: [os.path.join("out", "sequence_counts", "before_demultiplexing", dataset, dataset + ".csv") for dataset in DATASETS]
+    output:
+        "out/sequence_counts/before_demultiplexing/aggregated.csv"
+    shell:
+        '''
+        echo "dataset,stage,sample,reads" >{output}
+        for f in {input}; do cat $f >>{output}; done
         '''
 
 # sequence counts after demultiplexing
 
-rule sequence_counts_post_demultiplexing:
+rule sequence_counts_after_demultiplexing:
     input:
         "out/{dataset}/demultiplexed/{sample}-R1.fastq.gz"
     output:
-        "out/sequence_counts/post_demultiplexing/{dataset}/{sample}.txt"
+        "out/sequence_counts/after_demultiplexing/{dataset}/{sample}.csv"
     shell:
         '''
+        DATASET={wildcards.dataset}
+        STAGE='after demultiplexing'
         SAMPLE=`basename {input} -R1.fastq.gz`
         SEQS=`echo $(zcat {input} | wc -l)/4|bc`
-        echo ${SAMPLE} ${SEQS} >{output}
+        echo ${{DATASET}},${{STAGE}},${{SAMPLE}},${{SEQS}} >{output}
         '''
 
-rule aggregate_sequence_counts_post_demultiplexing:
+rule aggregate_sequence_counts_after_demultiplexing:
     input:
-        lambda wildcards: [os.path.join("out", "sequence_counts", "post_demultiplexing", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcards.dataset]]
+        lambda wildcards: [os.path.join("out", "sequence_counts", "after_demultiplexing", dataset, sample + ".csv") for dataset in DATASETS for sample in SAMPLES[dataset]]
     output:
-        "out/sequence_counts/post_demultiplexing/{dataset}.txt"
+        "out/sequence_counts/after_demultiplexing/aggregated.csv"
     shell:
         '''
-        rm -rf {output}
+        echo "dataset,stage,sample,reads" >{output}
         for f in {input}; do cat $f >>{output}; done
         '''
 
-# sequence counts after demultiplexing and filtering
+# sequence counts after filtering Ns
 
-rule sequence_counts_post_demultiplexing_and_filtering:
+rule sequence_counts_after_filtering_Ns:
     input:
         "out/{dataset}/demultiplexed_no_Ns/{sample}-R1.fastq.gz"
     output:
-        "out/sequence_counts/post_demultiplexing_noNs/{dataset}/{sample}.txt"
+        "out/sequence_counts/after_filtering_Ns/{dataset}/{sample}.csv"
     shell:
         '''
+        DATASET={wildcards.dataset}
+        STAGE='after filtering Ns'
         SAMPLE=`basename {input} -R1.fastq.gz`
         SEQS=`echo $(zcat {input} | wc -l)/4|bc`
-        echo ${SAMPLE} ${SEQS} >{output}
+        echo ${{DATASET}},${{STAGE}},${{SAMPLE}},${{SEQS}} >{output}
         '''
 
-rule aggregate_sequence_counts_post_demultiplexing_and_filtering:
+rule aggregate_sequence_counts_after_filtering_Ns:
     input:
-        lambda wildcards: [os.path.join("out", "sequence_counts", "post_demultiplexing_noNs", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcards.dataset]]
+        lambda wildcards: [os.path.join("out", "sequence_counts", "after_filtering_Ns", dataset, sample + ".csv") for dataset in DATASETS for sample in SAMPLES[dataset]]
     output:
-        "out/sequence_counts/post_demultiplexing_noNs/{dataset}.txt"
+        "out/sequence_counts/after_filtering_Ns/aggregated.csv"
     shell:
         '''
-        rm -rf {output}
+        echo "dataset,stage,sample,reads" >{output}
         for f in {input}; do cat $f >>{output}; done
         '''
 
 # sequence counts after running cutadapt
 
-rule sequence_counts_post_cutadapt:
+rule sequence_counts_after_cutadapt:
     input:
         "out/{dataset}/cutadapt/{sample}-R1.fastq.gz"
     output:
-        "out/sequence_counts/post_cutadapt/{dataset}/{sample}.txt"
+        "out/sequence_counts/after_cutadapt/{dataset}/{sample}.csv"
     shell:
         '''
+        DATASET={wildcards.dataset}
+        STAGE='after cutadapt'
         SAMPLE=`basename {input} -R1.fastq.gz`
         SEQS=`echo $(zcat {input} | wc -l)/4|bc`
-        echo ${SAMPLE} ${SEQS} >{output}
+        echo ${{DATASET}},${{STAGE}},${{SAMPLE}},${{SEQS}} >{output}
         '''
 
-rule aggregate_sequence_counts_post_cutadapt:
+rule aggregate_sequence_counts_after_cutadapt:
     input:
-        lambda wildcards: [os.path.join("out", "sequence_counts", "post_cutadapt", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcards.dataset]]
+        lambda wildcards: [os.path.join("out", "sequence_counts", "after_cutadapt", dataset, sample + ".csv") for dataset in DATASETS for sample in SAMPLES[dataset]]
     output:
-        "out/sequence_counts/post_cutadapt/{dataset}.txt"
+        "out/sequence_counts/after_cutadapt/aggregated.csv"
     shell:
         '''
-        rm -rf {output}
+        echo "dataset,stage,sample,reads" >{output}
         for f in {input}; do cat $f >>{output}; done
         '''
 
 # sequence counts after filterAndTrim
 
-rule sequence_counts_post_filter_and_trim:
+rule sequence_counts_after_filterAndTrim:
     input:
         "out/{dataset}/filterAndTrim/{sample}-R1.fastq.gz"
     output:
-        "out/sequence_counts/post_filterAndTrim/{dataset}/{sample}.txt"
+        "out/sequence_counts/after_filterAndTrim/{dataset}/{sample}.csv"
     shell:
         '''
+        DATASET={wildcards.dataset}
+        STAGE='after filterAndTrim'
         SAMPLE=`basename {input} -R1.fastq.gz`
         SEQS=`echo $(zcat {input} | wc -l)/4|bc`
-        echo ${SAMPLE} ${SEQS} >{output}
+        echo ${{DATASET}},${{STAGE}},${{SAMPLE}},${{SEQS}} >{output}
         '''
 
-rule aggregate_sequence_counts_post_filter_and_trim:
+rule aggregate_sequence_counts_after_filterAndTrim:
     input:
-        lambda wildcards: [os.path.join("out", "sequence_counts", "post_filterAndTrim", wildcards.dataset, sample + ".txt") for sample in SAMPLES[wildcards.dataset]]
+        lambda wildcards: [os.path.join("out", "sequence_counts", "after_filterAndTrim", dataset, sample + ".csv") for dataset in DATASETS for sample in SAMPLES[dataset]]
     output:
-        "out/sequence_counts/post_filterAndTrim/{dataset}.txt"
+        "out/sequence_counts/after_filterAndTrim/aggregated.csv"
     shell:
         '''
-        rm -rf {output}
+        echo "dataset,stage,sample,reads" >{output}
         for f in {input}; do cat $f >>{output}; done
         '''
 
 # sequence counts after running dada
 
-rule sequence_counts_post_dada:
+rule sequence_counts_after_dada:
     input:
-        "out/{dataset}/dada/sequence_table.rds"
+        "out/{dataset}/dada-merge/sequence_table.rds"
     output:
-        "out/sequence_counts/post_dada/{dataset}.txt"
+        "out/sequence_counts/after_dada/{dataset}/{dataset}.csv"
     conda:
-        'envs/dada2-1.18.0.yaml'
+        "envs/dada2-1.18.0.yaml"
+    shell:
+        "Rscript code/sequence_counts_after_dada.R {input} {output} {wildcards.dataset} 'after dada'"
+
+rule aggregate_sequence_counts_after_dada:
+    input:
+        expand("out/sequence_counts/after_dada/{dataset}/{dataset}.csv", dataset = DATASETS)
+    output:
+        "out/sequence_counts/after_dada/aggregated.csv"
     shell:
         '''
-        # make sure folder for output file exists
-            mkdir -p `dirname {output}`
-        # count sequences in sequence table
-            Rscript sequence_counts_post_dada.R {input} {output}
+        echo "dataset,stage,sample,reads" >{output}
+        for f in {input}; do tail -n +2 $f >>{output}; done
         '''
 
-# sequence counts after removing chimeras
+# sequence counts after removing chimeras (same Rscript as after_dada)
 
-rule sequence_counts_post_chimeras:
+rule sequence_counts_after_removing_chimeras:
     input:
         "out/{dataset}/remove_chimeras/sequence_table.rds"
     output:
-        "out/sequence_counts/post_chimeras/{dataset}.txt"
+        "out/sequence_counts/after_removing_chimeras/{dataset}/{dataset}.csv"
     conda:
-        'envs/dada2-1.18.0.yaml'
+        "envs/dada2-1.18.0.yaml"
+    shell:
+        "Rscript code/sequence_counts_after_dada.R {input} {output} {wildcards.dataset} 'after removing chimeras'"
+
+rule aggregate_sequence_counts_after_removing_chimeras:
+    input:
+        expand("out/sequence_counts/after_removing_chimeras/{dataset}/{dataset}.csv", dataset = DATASETS)
+    output:
+        "out/sequence_counts/after_removing_chimeras/aggregated.csv"
     shell:
         '''
-        # make sure folder for output file exists
-            mkdir -p `dirname {output}`
-        # count sequences in sequence table
-            Rscript sequence_counts_post_dada.R {input} {output}
+        echo "dataset,stage,sample,reads" >{output}
+        for f in {input}; do tail -n +2 $f >>{output}; done
         '''
 
-# sequence counts after exporting to phyloseq (should be the same as post-chimeras)
-#### could we ignore the non-cleaned version of 16S, or insert an extra step where we see the effect of cleaning?
+# sequence counts after cleaning
 
-# ... for dataset == "16S"
-rule sequence_counts_post_phyloseq_16S:
+rule sequence_counts_after_cleaning:
     input:
-        phyloseq = "out/16S/phyloseq/phyloseq.rds",
-        phyloseq_cleaned = "out/16S/phyloseq/phyloseq_cleaned.rds"
+        lambda wildcards: os.path.join("out", wildcards.dataset, "phyloseq", "phyloseq_cleaned.rds") 
+            if wildcards.dataset == "16S" 
+            else os.path.join("out", wildcards.dataset, "phyloseq", "phyloseq.rds")
     output:
-        phyloseq = "out/sequence_counts/post_phyloseq/16S/phyloseq.txt",
-        phyloseq_cleaned = "out/sequence_counts/post_phyloseq/16S/phyloseq_cleaned.rds"
+        "out/sequence_counts/after_cleaning/{dataset}/{dataset}.csv"
     conda:
         "envs/phyloseq.yaml"
     shell:
+        "Rscript code/sequence_counts_after_cleaning.R {input} {output} {wildcards.dataset} 'after cleaning'"
+
+rule aggregate_sequence_counts_after_cleaning:
+    input:
+        expand("out/sequence_counts/after_cleaning/{dataset}/{dataset}.csv", dataset = DATASETS)
+    output:
+        "out/sequence_counts/after_cleaning/aggregated.csv"
+    shell:
         '''
-        # make sure folder for output file exists
-            mkdir -p `dirname {output}`
-        # count sequences in sequence table
-            Rscript sequence_counts_post_phyloseq.R {input.phyloseq} {output.phyloseq}
-            Rscript sequence_counts_post_phyloseq.R {input.phyloseq_cleaned} {output.phyloseq_cleaned}
+        echo "dataset,stage,sample,reads" >{output}
+        for f in {input}; do tail -n +2 $f >>{output}; done
         '''
 
-# ... for dataset != "16S"
-for dataset in [d for d in DATASETS if d != "16S"]:
-    rule:
-        name:
-            'sequence_counts_post_phyloseq_' + dataset
-        input:
-            "out/{dataset}/phyloseq/phyloseq.rds"
-        output:
-            "out/sequence_counts/post_phyloseq/{dataset}/phyloseq.txt"
-        conda:
-            "envs/phyloseq.yaml"
-        shell:
-            '''
-            # make sure folder for output file exists
-                mkdir -p `dirname {output}`
-            # count sequences in sequence table
-                Rscript sequence_counts_post_phyloseq.R {input} {output}
-            '''
-            
-# sequence counts after normalization (should be the same as post-chimeras)
-            
-rule sequence_counts_post_normalize:
+# sequence counts after combining (should be the same as post-cleaning)
+
+rule sequence_counts_after_combining:
     input:
-        "out/combined/amplicon_normalized.rdata"
+        "out/combined/amplicon.rds"
     output:
-        expand("out/sequence_counts/post_normalize/{dataset}.txt", dataset = DATASETS)
-    params:
-        output_dir = "out/sequence_counts/post_normalize"
+        "out/sequence_counts/after_combining/aggregated.csv"
     conda:
         "envs/phyloseq.yaml"
     shell:
+        "Rscript code/sequence_counts_after_combining.R {input} {output} 'after combining'"
+
+# collate sequence counts
+
+rule aggregate_sequence_counts_all_stages:
+    input:
+        before_demultiplexing = "out/sequence_counts/before_demultiplexing/aggregated.csv",
+        after_demultiplexing = "out/sequence_counts/after_demultiplexing/aggregated.csv",
+        after_filtering_Ns = "out/sequence_counts/after_filtering_Ns/aggregated.csv",
+        after_cutadapt = "out/sequence_counts/after_cutadapt/aggregated.csv",
+        after_filterAndTrim = "out/sequence_counts/after_filterAndTrim/aggregated.csv",
+        after_dada = "out/sequence_counts/after_dada/aggregated.csv",
+        after_removing_chimeras = "out/sequence_counts/after_removing_chimeras/aggregated.csv",
+        after_cleaning = "out/sequence_counts/after_cleaning/aggregated.csv",
+        after_combining = "out/sequence_counts/after_combining/aggregated.csv"
+    output:
+        "out/sequence_counts/summary/aggregated.csv"
+    conda:
+        # this rule does not actually use phyloseq but this saves creating a separate environment with here and tidyverse
+        "envs/phyloseq-tidyverse.yaml"
+    shell:
         '''
-        # make sure folder for output files exists
-            mkdir -p {params.output_dir}
-        # count sequences in sequence table
-            Rscript sequence_counts_post_normalize.R {input} {params.output_dir}
+        echo "dataset,stage,sample,reads" >{output}
+        for f in {input}; do tail -n +2 $f >>{output}; done
         '''
 
 ################################

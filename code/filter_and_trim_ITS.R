@@ -25,6 +25,23 @@
 
 # filter reads
 
-    filterAndTrim(filenames$input.read1, filenames$output.read1, filenames$input.read2, filenames$output.read2,
-        maxN = params$maxN, truncQ = params$truncQ, maxEE = params$maxEE, minLen = params$minLen,
-        rm.phix = TRUE, compress = TRUE, multithread = TRUE)  # on windows, set multithread = FALSE
+    fastqPairedFilter(
+        fn = c(filenames$input.read1, filenames$input.read2),
+        fout = c(filenames$output.read1, filenames$output.read2),
+        maxN = params$maxN,
+        truncQ = params$truncQ,
+        maxEE = params$maxEE,
+        minLen = params$minLen,
+        rm.phix = c(TRUE, TRUE),
+        compress = TRUE
+    )
+
+# create empty files if all reads filtered out
+
+    for (output.file in filenames[c("output.read1", "output.read2")]) {
+        if (!file.exists(output.file)) {
+            gzf = gzfile(output.file)
+            cat ('', file = gzf, fill = FALSE)
+            close (gzf)
+        }
+    }

@@ -1,6 +1,6 @@
 21 May 2021
 
-N.B. specification of r-matrix=1.3-2 here
+N.B. specification of r-matrix=1.3-2 in this yaml file
 
 r-matrix=1.3-3 is loaded by default if not specified, but there is some issue that causes problems when dada2 calls functions from the package
 
@@ -8,4 +8,25 @@ apparently this issue will be fixed in the next version of dada2 (v 1.19?), by r
 
 consider upgrading to dada2 v1.19 and removing specification of r-matrix when it is available
 
+--------
+
+12 Feb 2024
+
+After migration to Carpenter, switching to strict channel priorities i.e.
+
+    conda config --set channel_priority strict
+
+prevents the environment being built from this yaml file. Leaving channel priorities as 'true', i.e. 
+
+    conda config --set channel_priority true
+
+allow the environment to be built, although it takes a while, even with mamba instead of conda. Attempts to upgrade the yaml file from dada2 1.18 to dada2 1.30 with strict channel priority were unsuccessful. This probably requires some tweaking of the conda channels, perhaps altering or removing the other dependencies in the yaml file, or altering the versions required.
+
+--------
+
+13 Feb 2024
+
+Removing package 'here' from this environment.
+
+--------
 

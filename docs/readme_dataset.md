@@ -57,4 +57,4 @@ Walters, William, Embriette R Hyde, Donna Berg-Lyons, Gail Ackermann, Greg Humph
 White, TJ, TD Bruns, S Lee and J Taylor (1990). Amplification and direct sequencing of fungal ribosomal RNA genes for phylogenetics. In: Innis MA, DH Gefland, JJ Sninsky and TJ White (eds). *PCR protocols: a guide to method and applications*. San Diego, Academic Press. pp. 315-322. doi:10.1016/b978-0-12-372180-8.50042-1
 
 ---
-Created by [Chris Baker](https://github.com/bakerccm)
+Created by [Chris Baker](@rdcrlccb)

@@ -72,7 +72,7 @@ This section briefly outlines the steps in the workflow:
 
 **remove_chloroplasts** applies several post-pipeline filters to the 16S dataset. It removes reads (i) designated as Eukaryotes; (ii) designated as Archaea; (iii) designated as mitochondria; (iv) shown as NA for Silva or RDP kingdom; (v) designated as chloroplasts. It also applies a length filter, only allowing through ASVs with sequences in the range 251:257 bp. The Silva, RDP and Decipher taxonomy results are jointly used for this filtering. See code in [remove_chloroplasts.R](/code/remove_chloroplasts.R) for details of how the filtering is executed.
 
-**normalize_data** creates a copy of the processed `phyloseq` objects in which the read data are normalized using total sum scaling, i.e. dividing each read count by the total number of reads for the sample in the final dataset. For convenience, several versions of the normalized dataset are created in which results are aggregated at different taxonomic levels.
+**combine_data** combines the generated results into a `phyloseq` object for  each dataset, groups those objects into a list, and saves the list as an R datastream (RDS) file. 
 
 ### Citations
 
@@ -83,4 +83,4 @@ Leipzig, Jeremy (2016). A review of bioinformatic pipeline frameworks. *Briefing
 Mölder, F, KP Jablonski, B Letcher, MB Hall, CH Tomkins-Tinch, V Sochat, J Forster, S Lee, SO Twardziok, A Kanitz, A Wilm, M Holtgrewe, S Rahmann, S Nahnsen and J Köster (2021). Sustainable data analysis with Snakemake. *F1000Research* 10:33. doi:10.12688/f1000research.29032.1
 
 ---
-Created by [Chris Baker](https://github.com/bakerccm)
+Created by [Chris Baker](@rdcrlccb)

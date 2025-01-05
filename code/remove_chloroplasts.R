@@ -2,7 +2,6 @@
 
 # load packages
 
-    library("here")
     library("phyloseq")
     library("Biostrings")
     library("tidyverse")
@@ -12,7 +11,7 @@
     args = commandArgs(trailingOnly=TRUE)
 
     # for debugging
-    # args = c(here("out", "16S", "phyloseq", "phyloseq.rds"), here("out", "16S", "phyloseq", "phyloseq_cleaned.rds"), here("out", "16S", "phyloseq", "phyloseq_cleaned.fasta"))
+    # args = c("out/16S/phyloseq/phyloseq.rds", "out/16S/phyloseq/phyloseq_cleaned.rds", "out/16S/phyloseq/phyloseq_cleaned.fasta")
 
     filenames <- list(
         input_phyloseq = args[1], # .rds file containing 16S phyloseq object

@@ -54,7 +54,7 @@
 
 # get sample metadata and parse
 
-    sample.metadata <- read.table(filenames$input_file_metadata, header = TRUE, stringsAsFactors = FALSE)
+    sample.metadata <- read.table(filenames$input_file_metadata, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 
     # replace dashes with periods to avoid headaches in phyloseq later
         sample.metadata$SampleID <- gsub("-", ".", sample.metadata$SampleID)

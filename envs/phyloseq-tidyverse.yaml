@@ -1,6 +1,5 @@
 name: phyloseq-tidyverse
 channels:
- - r
  - bioconda
  - conda-forge
  - defaults

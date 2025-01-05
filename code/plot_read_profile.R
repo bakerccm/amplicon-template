@@ -17,5 +17,8 @@
 # plot read quality profiles
 
     pdf(filenames$output.pdf, width = 8, height = 5)
-    plotQualityProfile(c(filenames$input.read1, filenames$input.read2))
+    # skip plotting if input files are empty
+    if (ShortRead::countLines(filenames$input.read1) > 0) {
+        plotQualityProfile(c(filenames$input.read1, filenames$input.read2))
+    }
     dev.off()
