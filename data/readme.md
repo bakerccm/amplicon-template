@@ -1,4 +1,4 @@
-# Raw data for SERDP RDX project
+# Raw data for <...> project
 
 See [scripts/download_data.sh](../scripts/download_data.sh) for shell code to download the sequence data.
 
