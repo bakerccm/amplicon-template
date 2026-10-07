@@ -4,7 +4,7 @@
 
 ### Overview
 
-The pipeline in this repo is designed to process the six files (forward, reverse and index reads for the 16S and ITS datasets) provided by Argonne to CRREL prior to any demultiplexing or analysis. The output of the pipeline is a pair of `phyloseq` R objects (one for 16S and one for ITS) ready for statistical analysis, each comprising an ASV table, a table of sample metadata, and a table of taxonomic assignments.
+The pipeline in this repo is designed to process the six files (forward, reverse and index reads for the 16S and ITS datasets) provided by Argonne prior to any demultiplexing or analysis. The output of the pipeline is a pair of `phyloseq` R objects (one for 16S and one for ITS) ready for statistical analysis, each comprising an ASV table, a table of sample metadata, and a table of taxonomic assignments.
 
 This workflow is based on the [dada2 v1.18.0](https://benjjneb.github.io/dada2/tutorial.html) pipeline ([Callahan *et al*. 2016](#citations)).
 
