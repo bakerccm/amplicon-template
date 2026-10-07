@@ -83,4 +83,4 @@ Leipzig, Jeremy (2016). A review of bioinformatic pipeline frameworks. *Briefing
 Mölder, F, KP Jablonski, B Letcher, MB Hall, CH Tomkins-Tinch, V Sochat, J Forster, S Lee, SO Twardziok, A Kanitz, A Wilm, M Holtgrewe, S Rahmann, S Nahnsen and J Köster (2021). Sustainable data analysis with Snakemake. *F1000Research* 10:33. doi:10.12688/f1000research.29032.1
 
 ---
-Created by [Chris Baker](@rdcrlccb)
+Created by [Chris Baker](@bakerccm)
