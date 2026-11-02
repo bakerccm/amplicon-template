@@ -2,16 +2,25 @@
 # note trailing /* is required for use with !.gitkeep
 /data/*.fastq.gz
 /out/*
-/figures/*
+
+# ignore software
+/software/*
+!/software/readme.md
+
+# ignore databases
+/databases/*
+!/databases/download.sh
+!/databases/md5sums.txt
+!/databases/readme.md
 
 # ignore snakemake working files
 /.snakemake
 /snakemake.err
 /snakemake.out
 
-# ignore slurm files
-/slurm/*
-!/slurm/.gitkeep
+# ignore pbs files
+/pbs/*
+!/pbs/.gitkeep
 
 # ignore Mac OS system files
 .DS_Store
