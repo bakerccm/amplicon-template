@@ -1,23 +1,17 @@
-datasets:
-    - 16S
-    - ITS
-
-sample_metadata:
-    16S: "metadata/samples_16S.tsv"
-    ITS: "metadata/samples_ITS.tsv"
-
-# locations of raw data files
-# -- amend these if you save the raw data with a different name or location
-# input files can be gzipped
-raw_data:
+# locations of data and metadata files
+#  - amend these if you save data files with a different name or location
+#  - raw data files should be gzipped
+filepaths:
     16S:
-        index: "data/file1.fastq.gz"
-        read1: "data/file2.fastq.gz"
-        read2: "data/file3.fastq.gz"
+        index: 'data/file1.fastq.gz'
+        read1: 'data/file2.fastq.gz'
+        read2: 'data/file3.fastq.gz'
+        metadata: 'metadata/samples_16S.tsv'
     ITS:
-        index: "data/file4.fastq.gz"
-        read1: "data/file5.fastq.gz"
-        read2: "data/file6.fastq.gz"
+        index: 'data/file4.fastq.gz'
+        read1: 'data/file5.fastq.gz'
+        read2: 'data/file6.fastq.gz'
+        metadata: 'metadata/samples_ITS.tsv'
 
 primers:
     16S:
@@ -29,15 +23,15 @@ primers:
 
 # iu-demultiplex parameters
 # to use barcodes as supplied:
-iu-demultiplex: ""
+iu-demultiplex: ''
 # to reverse complement barcodes:
-# iu-demultiplex: "--rev-comp-barcodes"
+# iu-demultiplex: '--rev-comp-barcodes'
   
 # multiqc parameters
 # for non-interactive html outputs:
-multiqc: ""
+multiqc: ''
 # for interactive html outputs:
-# multiqc: "--interactive"
+# multiqc: '--interactive'
 
 # cutadapt parameters
 cutadapt:
@@ -64,24 +58,22 @@ fastqPairedFilter:
 learnErrors:
     nbases: 1e8
 
+# dada2::dada parameters
+dada:
+    threads: 2
+
 # locations of training sets for taxonomic assignment
-# (different tools require databases to be formatted differently, so databases are listed here as tool:database)
 databases:
     assignTaxonomy:
-        silva: 'databases/silva_nr99_v138.1_train_set.fa.gz'
-        rdp: 'databases/rdp_train_set_18.fa.gz'
+        silva: 'databases/silva_nr99_v138.2_toGenus_trainset.fa.gz'
         unite: 'databases/sh_general_release_dynamic_s_04.04.2024.fasta.gz' # alternatively, consider using the dev version at sh_general_release_dynamic_s_04.04.2024_dev.fasta.gz
     assignSpecies:
-        silva: 'databases/silva_species_assignment_v138.1.fa.gz'
-        rdp: 'databases/rdp_species_assignment_18.fa.gz'
-    DECIPHER:
-        silva: 'databases/SILVA_SSU_r138_2019.RData'
+        silva: 'databases/silva_v138.2_assignSpecies.fa.gz'
 
+# dada2::assignTaxonomy parameters
 assignTaxonomy:
-    threads: 8
+    threads: 32
 
-decipher:
-    threads: 8
-
+# sepp parameters
 sepp:
-    threads: 14
+    threads: 32

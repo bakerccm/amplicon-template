@@ -1,8 +1,7 @@
 #!/bin/bash
 
 ## Add your subproject ID here
-## Thurston subproject is ERDCH51863EOB 
-#PBS -A <your subproject ID>
+#PBS -A <SUBPROJECT_ID>
 
 #PBS -q standard
 #PBS -l select=1:ncpus=192:mpiprocs=192
@@ -12,13 +11,15 @@
 #PBS -l application=other
 
 #PBS -N snakemake
-#PBS -o pbs/snakemake.out
-#PBS -e pbs/snakemake.err
+#PBS -o pbs/
+#PBS -e pbs/
 
-## Replace 'amplicon-template' with the name for your folder
-cd ${WORKDIR}/amplicon-template
+# Move to directory where job was submitted.
+# Otherwise, PBS uses ~ as working directory by default.
+# ** N.B. Job should be submitted from repository root **
+cd $PBS_O_WORKDIR
 
-source activate snakemake-7.25.0
+source activate snakemake-8.27.1
 
 snakemake -c 192 --use-conda all
 

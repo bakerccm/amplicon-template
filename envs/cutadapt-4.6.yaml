@@ -1,7 +1,0 @@
-name: cutadapt-4.6
-channels:
- - bioconda
- - conda-forge
- - defaults
-dependencies:
- - cutadapt=4.6

@@ -1,0 +1,6 @@
+name: phyloseq-1.50.0
+channels:
+ - conda-forge
+ - bioconda
+dependencies:
+ - bioconductor-phyloseq=1.50.0

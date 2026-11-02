@@ -14,10 +14,10 @@ This pipeline runs on the ERDC Carpenter HPC cluster. It should be reproducible 
 
 You need to have a suitable version of [snakemake](https://snakemake.readthedocs.io/en/stable/index.html) installed. If you already have this from a previous project, there is no need to reinstall it. On some HPC systems, you may be able to skip installing it yourself and instead load an environment module that makes snakemake available to you.
 
-If you do need to install snakemake, [conda](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html) or (probably better) [mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) are recommended for this. There is a yaml file at [envs/snakemake-7.25.0.yaml](/envs/snakemake-7.25.0.yaml) that should provide specifications for a suitable conda environment. Something like this should do the trick: 
+If you do need to install snakemake, [conda](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html) or (probably better) [mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) are recommended for this. There is a yaml file at [envs/snakemake-8.27.1.yaml](/envs/snakemake-8.27.1.yaml) that should provide specifications for a suitable conda environment. Something like this should do the trick: 
 
 ```bash
-mamba env create -f envs/snakemake-7.25.0.yaml
+mamba env create -f envs/snakemake-8.27.1.yaml
 ```
 
 If you need to install conda/mamba, the Miniforge distribution suggested on the [mamba installation page](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) should work just fine.
@@ -53,7 +53,7 @@ bash scripts/install_sepp.sh
 The Carpenter HPC cluster has no internet connectivity from the compute nodes, so snakemake cannot create download software and create conda environments on the fly while running the pipeline. They will need to be installed first on the login nodes:
 
 ```bash
-conda activate snakemake-7.25.0
+conda activate snakemake-8.27.1
 snakemake -c 1 --use-conda --conda-create-envs-only all
 ```
 
@@ -64,7 +64,7 @@ You can skip this step if your computing environment permits internet connection
 You should now be in a position to run the pipeline:
 
 ```bash
-conda activate snakemake-7.25.0
+conda activate snakemake-8.27.1
 snakemake -c 192 --use-conda all
 ```
 
@@ -73,7 +73,7 @@ If you are running this on a cluster, you probably want to run it in a non-inter
 You might also want to run part of the pipeline at a time in order to review results along the way. For example:
 
 ```bash
-conda activate snakemake-7.25.0
+conda activate snakemake-8.27.1
 snakemake -c 192 --use-conda all_demultiplex_qc
 ```
 
@@ -82,4 +82,4 @@ snakemake -c 192 --use-conda all_demultiplex_qc
 The code in this repo is intended for general use with amplicon sequencing projects and is organized to facilitate reuse subject to the included [license](LICENSE). In particular, our implementation of the dada2 pipeline should be useable with similar 16S/ITS datasets by simply forking the repo and updating the parameters in the configuration file [config/config.yaml](/config/config.yaml) (e.g. names of input files, primer sequences, parameters used to control scripts, etc). However, the code may require customization depending on the specifics of the dataset -- e.g. file naming, file formatting, different genetic markers sequenced, input files organized differently, other processing steps such as decontamination, etc. The modular organization of the Snakemake workflow should facilitate such customization. If customization is required, the [snakefile](snakefile) and/or the [R code files](/code) should be updated as necessary.
 
 ---
-Created by Chris Baker (@bakerccm)
+Created by Chris Baker ([@bakerccm](https://github.com/bakerccm))

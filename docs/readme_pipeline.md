@@ -4,9 +4,9 @@
 
 ### Overview
 
-The pipeline in this repo is designed to process the six files (forward, reverse and index reads for the 16S and ITS datasets) provided by Argonne prior to any demultiplexing or analysis. The output of the pipeline is a pair of `phyloseq` R objects (one for 16S and one for ITS) ready for statistical analysis, each comprising an ASV table, a table of sample metadata, and a table of taxonomic assignments.
+The pipeline in this repo is designed to process the six files (forward, reverse and index reads for the 16S and ITS datasets) provided by Argonne to CRREL prior to any demultiplexing or analysis. The output of the pipeline is a pair of `phyloseq` R objects (one for 16S and one for ITS) ready for statistical analysis, each comprising an ASV table, a table of sample metadata, and a table of taxonomic assignments.
 
-This workflow is based on the [dada2 v1.18.0](https://benjjneb.github.io/dada2/tutorial.html) pipeline ([Callahan *et al*. 2016](#citations)).
+This workflow is based on the [dada2 v1.34.0](https://benjjneb.github.io/dada2/tutorial.html) pipeline ([Callahan *et al*. 2016](#citations)).
 
 The workflow is implemented here using the [Snakemake](https://snakemake.readthedocs.io) workflow engine ([Mölder *et al*. 2021](#citations)). This implementation provides a number of advantages including:
 
@@ -14,13 +14,13 @@ The workflow is implemented here using the [Snakemake](https://snakemake.readthe
  - supports flexible parallelization, which is especially useful for scaling the pipeline to larger datasets in a high-performance computing environment;
  - facilitates reproducibility by specifying software environments using [yaml files](/envs), and optionally automating the installation of those environments through Snakemake's interface with conda.
 
-The pipeline runs with Snakemake v7.25.0 as specified in [envs/snakemake-7.25.0.yaml](/envs/snakemake-7.25.0.yaml).
+The pipeline runs with Snakemake v8.27.1 as specified in [envs/snakemake-8.27.1.yaml](/envs/snakemake-8.27.1.yaml).
 
 ### Input files
 
 In addition to this repo, the pipeline requires raw sequence data and reference databases to be supplied in the folders [data](/data) and [databases](/databases).
 
-The raw sequence data can be downloaded according to the instructions in [data/readme.md](/data/readme.md) and [data/download.sh](/data/download.sh), and checked against [data/md5sums.txt](/data/md5sums.txt). The databases used for the analysis can be downloaded according to the instructions in [databases/readme.md](/databases/readme.md) and [databases/download.sh](/databases/download.sh), and checked against [databases/md5sums.txt](/databases/md5sums.txt).
+The raw sequence data can be downloaded according to the instructions in [data/readme.md](/data/readme.md) and [scripts/download_data.sh](/scripts/download_data.sh), and checked against [data/md5sums.txt](/data/md5sums.txt). The databases used for the analysis can be downloaded according to the instructions in [databases/readme.md](/databases/readme.md) and [scripts/download_databases.sh](/scripts/download_databases.sh), and checked against [databases/md5sums.txt](/databases/md5sums.txt).
 
 This pipeline may also be reused for other datasets. It assumes paired-end 16S and ITS sequencing data, with forward and reverse fastq files containing reads in matched order. Non-biological nucleotides (e.g. primers, adapters, linkers) should ideally be removed beforehand, although the `cutadapt` step of this workflow should hopefully clean up any residual primers. Metadata for the new dataset should be located at [metadata/samples_16S.tsv](/metadata/samples_16S.tsv) and [metadata/samples_ITS.tsv](/metadata/samples_ITS.tsv) in place of the project metadata.
 
@@ -62,15 +62,13 @@ This section briefly outlines the steps in the workflow:
 
 **remove_chimeras** filters out chimeras using `dada2::removeBimeraDenovo()` in `R` using the default 'consensus' method.
 
-**assign_taxonomy_16S** uses `dada2::assignTaxonomy()` to assign taxonomy given a database of reference sequences. For species-level assignments, two approaches are used: (i) only unambiguous identifications are allowed; and (ii) multiple species matches are allowed so long as they are consistent with the genus assigned by assignTaxonomy(). Results from both approaches are retained. Suitable reference databases should be supplied and specified in the configuration file at [config/config.yaml](/config/config.yaml). The RDP database and the Silva database are examples of suitable references, and details for obtaining them are provided in [databases/readme.md](/databases/readme.md).
-
-**decipher** uses `DECIPHER` as an alternative method of assigning taxonomy to the 16S dataset.
+**assign_taxonomy_16S** uses `dada2::assignTaxonomy()` to assign taxonomy given a database of reference sequences. For species-level assignments, two approaches are used: (i) only unambiguous identifications are allowed; and (ii) multiple species matches are allowed so long as they are consistent with the genus assigned by assignTaxonomy(). Results from both approaches are retained. Suitable reference databases should be supplied and specified in the configuration file at [config/config.yaml](/config/config.yaml). The Silva database is example of a suitable reference, and details for obtaining the database are provided in [databases/readme.md](/databases/readme.md).
 
 **assign_taxonomy_ITS** uses `dada2::assignTaxonomy()` to assign taxonomy given a database of reference sequences. Suitable reference databases should be supplied and specified in the configuration file at [config/config.yaml](/config/config.yaml). The Unite database is an example of a suitable reference, and details for obtaining it is provided in [databases/readme.md](/databases/readme.md).
 
 **export_to_phyloseq_16S** and **export_to_phyloseq_ITS** consolidate the processed sequence tables with read counts, the sample metadata, and the taxonomic assignments. These results are converted to `phyloseq` objects in `R` (one for each dataset). These objects are now ready for downstream statistical analysis using `phyloseq` or other software.
 
-**remove_chloroplasts** applies several post-pipeline filters to the 16S dataset. It removes reads (i) designated as Eukaryotes; (ii) designated as Archaea; (iii) designated as mitochondria; (iv) shown as NA for Silva or RDP kingdom; (v) designated as chloroplasts. It also applies a length filter, only allowing through ASVs with sequences in the range 251:257 bp. The Silva, RDP and Decipher taxonomy results are jointly used for this filtering. See code in [remove_chloroplasts.R](/code/remove_chloroplasts.R) for details of how the filtering is executed.
+**remove_chloroplasts** applies several post-pipeline filters to the 16S dataset. It removes reads (i) designated as Eukaryotes; ~~(ii) designated as Archaea;~~ (iii) designated as mitochondria; (iv) shown as NA for Silva or RDP kingdom; (v) designated as chloroplasts. It also applies a length filter, only allowing through ASVs with sequences in the range 251:257 bp. The Silva, RDP and Decipher taxonomy results are jointly used for this filtering. See code in [remove_chloroplasts.R](/code/remove_chloroplasts.R) for details of how the filtering is executed.
 
 **combine_data** combines the generated results into a `phyloseq` object for  each dataset, groups those objects into a list, and saves the list as an R datastream (RDS) file. 
 
@@ -83,4 +81,4 @@ Leipzig, Jeremy (2016). A review of bioinformatic pipeline frameworks. *Briefing
 Mölder, F, KP Jablonski, B Letcher, MB Hall, CH Tomkins-Tinch, V Sochat, J Forster, S Lee, SO Twardziok, A Kanitz, A Wilm, M Holtgrewe, S Rahmann, S Nahnsen and J Köster (2021). Sustainable data analysis with Snakemake. *F1000Research* 10:33. doi:10.12688/f1000research.29032.1
 
 ---
-Created by [Chris Baker](@bakerccm)
+Created by Chris Baker ([@bakerccm](https://github.com/bakerccm))

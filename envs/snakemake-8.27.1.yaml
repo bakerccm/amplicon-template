@@ -1,0 +1,6 @@
+name: snakemake-8.27.1
+channels:
+ - conda-forge
+ - bioconda
+dependencies:
+ - snakemake=8.27.1

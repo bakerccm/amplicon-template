@@ -1,4 +1,4 @@
-SampleID	Dataset	Project	BarcodeSequence	LinkerPrimerSequence	BarcodePlate	Well
+SampleID	Marker	Project	BarcodeSequence	LinkerPrimerSequence	BarcodePlate	Well
 STR_T0_nRDX_n11Y_nCOMP_R1	16S	serdp	CCGCCGTAGGGC	GTGTGYCAGCMGCCGCGGTAA	12	A1
 STR_T0_nRDX_n11Y_nCOMP_R2	16S	serdp	ACGCGTGCCCGG	GTGTGYCAGCMGCCGCGGTAA	12	A2
 STR_T0_nRDX_n11Y_nCOMP_R3	16S	serdp	CACTTAAGAGAA	GTGTGYCAGCMGCCGCGGTAA	12	A3

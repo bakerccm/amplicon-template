@@ -1,18 +1,10 @@
 # checksums for taxonomy database files
 # see also notes at readme.md
 
-1a465122bdf670a74eb8873de042bad6  rdp_species_assignment_18.fa.gz
-693c1ade0caf223e1fb7c6cf4da6f272  rdp_train_set_18.fa.gz
-
-6b41db7139834c71171f8ce5b5918fc6  silva_nr99_v138.1_train_set.fa.gz
-ba13ab369161e0cb85df7e0ee3a4182e  silva_nr99_v138.1_wSpecies_train_set.fa.gz
-f21c2d97c79ff07c17949a9622371a4c  silva_species_assignment_v138.1.fa.gz
+1764e2a36b4500ccb1c7d5261948a414  silva_nr99_v138.2_toGenus_trainset.fa.gz
+e0455a1a7de820039d684aad2053e937  silva_nr99_v138.2_toSpecies_trainset.fa.gz
+62fd939bd1aa9832d2089847f9f0b87d  silva_v138.2_assignSpecies.fa.gz
 
 146699f03719712df7eb2c6bb8358179  sh_general_release_dynamic_s_04.04.2024_dev.fasta
-
 d43ee757d45db5cb25e7df8d9a08e579  sh_general_release_dynamic_s_04.04.2024.fasta
-
 a498a463cee353f3faeea00de4447404  db5b0819-2766-4d2f-a2cb-9f100eb447cd.tgz
-
-cb983b6a5e8cdb46f8c88b5afae21f66  SILVA_SSU_r138_2019.RData
-

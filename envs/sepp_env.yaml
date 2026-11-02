@@ -1,7 +1,6 @@
 name: sepp_env
 channels:
-   - bioconda
    - conda-forge
-   - defaults
+   - bioconda
 dependencies:
    - python=3.8.5
