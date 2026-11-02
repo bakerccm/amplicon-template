@@ -27,8 +27,8 @@ for (marker in names(ps.list)) {
 
     read.sums <- sample_sums(ps.list[[marker]])
     read.sums.list[[marker]] <- data.frame(
-        stage = stage.name,
         marker = marker,
+        stage = stage.name,
         sample = names(read.sums),
         reads = read.sums
     )
