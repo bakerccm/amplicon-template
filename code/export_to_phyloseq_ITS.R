@@ -1,5 +1,5 @@
 # package sequence data up with sample and taxonomy metadata as a phyloseq object ready for analysis
-# -- use for 16S dataset
+# -- use for ITS dataset
 
 # load packages
 
@@ -12,8 +12,8 @@
 
     filenames <- list(
         input_file_sequence_table = args[1], # .rds file for sequence table without chimeras
-        input_file_unite = args[2], # .rds file for unite taxonomy assignments
-        input_file_metadata = args[3], # sample metadata file from config/
+        input_file_metadata = args[2], # sample metadata file from config/
+        input_file_unite = args[3], # .rds file for unite taxonomy assignments
         output_file = args[4] # .rds file name to save phyloseq object output
     )
 

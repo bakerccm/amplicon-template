@@ -23,16 +23,16 @@
 
 read.sums.list <- list()
 
-for (dataset in names(ps.list)) {
+for (marker in names(ps.list)) {
 
-    read.sums <- sample_sums(ps.list[[dataset]])
-    read.sums.list[[dataset]] <- data.frame(
-        dataset = dataset,
+    read.sums <- sample_sums(ps.list[[marker]])
+    read.sums.list[[marker]] <- data.frame(
         stage = stage.name,
+        marker = marker,
         sample = names(read.sums),
         reads = read.sums
     )
-    rownames(read.sums.list[[dataset]]) <- NULL
+    rownames(read.sums.list[[marker]]) <- NULL
 
 }
 
@@ -43,4 +43,3 @@ write.table(
     file = filenames$output,
     sep = ",", row.names = FALSE, quote= FALSE
 )
-

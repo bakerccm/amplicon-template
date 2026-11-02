@@ -17,6 +17,8 @@
         output_file_multiple = args[5] # .rds file for output sequence table with taxonomy attached (multiple matches allowed)
     )
 
+    num.threads <- as.numeric(args[6])
+
 # read in data
 
     sequence.table.nochimeras <- readRDS(filepaths$input_file)
@@ -25,7 +27,7 @@
 #   minBoot = 50 by default (recommended for sequences of 250bp and less; see Wang et al 2007)
 #   tryRC = FALSE by defaultl; consider using TRUE if many sequences fail to assign
 
-    taxa <- assignTaxonomy(seqs = sequence.table.nochimeras, refFasta = filepaths$assignTaxonomy_refFasta, multithread = TRUE)
+    taxa <- assignTaxonomy(seqs = sequence.table.nochimeras, refFasta = filepaths$assignTaxonomy_refFasta, multithread = num.threads)
 
 # add species assignments where genus is consistent
 # tryRC = FALSE by default; consider using TRUE if many sequences fail to assign

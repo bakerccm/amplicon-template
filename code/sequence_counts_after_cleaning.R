@@ -13,8 +13,8 @@
         output = args[2]  # .txt file for output 
     )
 
-    dataset.name <- args[3]
-    stage.name <- args[4]
+    stage.name <- args[3]
+    marker.name <- args[4]
 
 # get input data
 
@@ -24,8 +24,8 @@
 
     read.sums <- sample_sums(ps)
     read.sums.df <- data.frame(
-        dataset = dataset.name,
         stage = stage.name,
+        marker = marker.name,
         sample = names(read.sums), 
         reads = read.sums
     )

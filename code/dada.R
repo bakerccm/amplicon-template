@@ -20,21 +20,20 @@
         output_rds = args[5]  # save mergePairs() output to rds file
     )
 
+    dada.threads = as.numeric(args[6]) # number of threads to use with dada(); default is FALSE so set this to 1 to restore default behavior
+
 # read in previously-computed error profiles
 
     error_profile <- sapply(filepaths$input_error_profiles, simplify=FALSE, readRDS)
 
 # sample inference
 
-    # 5 seconds
     derep <- sapply(filepaths$input_fastqs, simplify=FALSE, derepFastq)
 
-    # 30 seconds
-    dd <- sapply(names(derep), simplify=FALSE, function (X) dada(derep = derep[[X]], err = error_profile[[X]], multithread = TRUE))
+    dd <- sapply(names(derep), simplify=FALSE, function (X) dada(derep = derep[[X]], err = error_profile[[X]], multithread = dada.threads))
 
 # merge paired end reads
 
-    # 2 seconds
     merged.pairs <- mergePairs(dadaF = dd$read1, derepF = derep$read1, dadaR = dd$read2, derepR = derep$read2)
 
 # save merged pairs
