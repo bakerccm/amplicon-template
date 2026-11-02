@@ -733,7 +733,7 @@ rule aggregate_sequence_counts_after_filtering_Ns:
         'out/sequence_counts/after_filtering_Ns/aggregated.csv'
     shell:
         '''
-        echo 'marker,stage,sample,reads' >{output}
+        echo 'stage,marker,sample,reads' >{output}
         for f in {input}; do cat $f >>{output}; done
         '''
 

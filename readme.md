@@ -28,9 +28,9 @@ The code respository currently lives on the ERDC GitLab. Since you are reading t
 
 ### Add sequence data
 
-The required raw sequence data files are described at [data/readme.md](/databases/readme.md). These files are too big to be stored in the code repository. (The sample [metadata](/metadata), however, are provided with the repo.) The sequence files need to be obtained separately and placed in the [data](/data) folder following the instructions in [data/readme.md](/data/readme.md). The checksums for the downloaded files should be compared against the values in [data/md5sums.txt](/data/md5sums.txt).
+The required raw sequence data files are described at [data/readme.md](/data/readme.md). These files are too big to be stored in the code repository. (The sample [metadata](/metadata), however, are provided with the repo.) The sequence files need to be obtained separately and placed in the [data](/data) folder following the instructions in [data/readme.md](/data/readme.md). The checksums for the downloaded files should be compared against the values in [data/md5sums.txt](/data/md5sums.txt).
 
-For now, the sequence data files are available in the Soil Micro shared drive at `datasets/...`. Eventually, these files will likely be made available for public download. Download details will be provided here, and shell commands to download the data at [scripts/download.sh](/scripts/download.sh).
+Prior to finalization of this repository, data files will be made available for public download. Download details will be provided here, and shell commands to download the data at [scripts/download_data.sh](/scripts/download_data.sh).
 
 ### Add reference databases
 

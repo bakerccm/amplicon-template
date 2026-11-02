@@ -24,8 +24,8 @@
 
     read.sums <- apply(sequence.table, MAR = 1 , sum)
     read.sums.df <- data.frame(
-        marker = marker.name,
         stage = stage.name,
+        marker = marker.name,
         sample = names(read.sums),
         reads = read.sums
     )
